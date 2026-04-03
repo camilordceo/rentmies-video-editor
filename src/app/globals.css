@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-editor-bg text-editor-text antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-editor-bg;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-editor-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-editor-text-muted;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-editor-accent text-white rounded-lg font-medium
+           hover:bg-editor-accent-hover transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2
+           focus:ring-offset-editor-bg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-editor-panel text-editor-text rounded-lg font-medium
+           border border-editor-border hover:bg-editor-border transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2
+           focus:ring-offset-editor-bg;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-editor-danger/20 text-editor-danger rounded-lg font-medium
+           border border-editor-danger/30 hover:bg-editor-danger/30 transition-colors duration-150;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg
+           text-editor-text placeholder-editor-text-muted text-sm
+           focus:outline-none focus:ring-2 focus:ring-editor-accent focus:border-transparent
+           transition-all duration-150;
+  }
+
+  .panel {
+    @apply bg-editor-surface border border-editor-border rounded-xl;
+  }
+
+  .panel-header {
+    @apply px-4 py-3 border-b border-editor-border font-semibold text-sm
+           text-editor-text-muted uppercase tracking-wider;
+  }
+
+  .editor-layout {
+    @apply h-screen w-screen overflow-hidden grid;
+    grid-template-columns: 280px 1fr 320px;
+    grid-template-rows: 56px 1fr;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs bg-editor-panel border border-editor-border
+           rounded shadow-lg pointer-events-none whitespace-nowrap;
+  }
+}

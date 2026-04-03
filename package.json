@@ -1,0 +1,37 @@
+{
+  "name": "rentmies-video-editor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "remotion:preview": "remotion preview src/remotion/Root.tsx",
+    "remotion:render": "remotion render src/remotion/Root.tsx VideoEditor out/video.mp4",
+    "remotion:render-short": "remotion render src/remotion/Root.tsx ShortVideo out/short.mp4",
+    "remotion:render-youtube": "remotion render src/remotion/Root.tsx YouTubeVideo out/youtube.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.232",
+    "@remotion/player": "4.0.232",
+    "@remotion/renderer": "4.0.232",
+    "next": "14.2.21",
+    "openai": "^4.73.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.232",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3"
+  }
+}
