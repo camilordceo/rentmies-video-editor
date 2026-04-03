@@ -6,7 +6,7 @@ import { Caption } from "../components/Caption";
 import { ImageLayer } from "../components/ImageLayer";
 import { TransitionEffect } from "../components/TransitionEffect";
 
-interface VideoEditorProps {
+export interface VideoEditorProps extends Record<string, unknown> {
   scenes: Scene[];
 }
 

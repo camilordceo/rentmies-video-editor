@@ -3,9 +3,11 @@ import { v4 as uuidv4 } from "uuid";
 import type { CaptionSegment, CaptionWord } from "./types";
 import { secondsToFrames } from "./utils";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient(): OpenAI {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 interface WhisperSegment {
   id: number;
@@ -49,6 +51,7 @@ export async function transcribeFile(
   language: string;
   duration: number;
 }> {
+  const openai = getOpenAIClient();
   const response = (await openai.audio.transcriptions.create({
     file: file,
     model: "whisper-1",

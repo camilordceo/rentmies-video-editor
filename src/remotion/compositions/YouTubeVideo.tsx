@@ -3,7 +3,7 @@ import { AbsoluteFill } from "remotion";
 import type { Scene } from "@/lib/types";
 import { VideoEditor } from "./VideoEditor";
 
-interface YouTubeVideoProps {
+interface YouTubeVideoProps extends Record<string, unknown> {
   scenes: Scene[];
 }
 
