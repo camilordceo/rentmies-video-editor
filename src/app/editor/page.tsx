@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { EditorProvider, useEditor } from "@/lib/store";
@@ -357,7 +357,7 @@ function EditorContent() {
   );
 }
 
-export default function EditorPage() {
+function EditorPageInner() {
   const searchParams = useSearchParams();
 
   const project = useMemo(() => {
@@ -376,5 +376,19 @@ export default function EditorPage() {
     <EditorProvider initialProject={project}>
       <EditorContent />
     </EditorProvider>
+  );
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-screen bg-editor-bg flex items-center justify-center">
+          <div className="text-editor-text-muted text-sm">Loading editor...</div>
+        </div>
+      }
+    >
+      <EditorPageInner />
+    </Suspense>
   );
 }
