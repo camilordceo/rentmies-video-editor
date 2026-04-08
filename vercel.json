@@ -2,9 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "env": {
-    "OPENAI_API_KEY": "@openai-api-key"
-  },
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 60
