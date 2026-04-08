@@ -24,7 +24,7 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ["localhost"],
+    domains: ["localhost", "kkqzzdtdkrxdlfrllauy.supabase.co"],
   },
   experimental: {
     serverComponentsExternalPackages: ["@remotion/renderer"],
