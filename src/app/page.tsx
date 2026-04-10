@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Project, AspectRatio } from "@/lib/types";
 import TemplateSelector from "@/components/TemplateSelector";
 import { TEMPLATES } from "@/lib/templates";
 import { formatTime } from "@/lib/utils";
+import { useAuth } from "@/components/AuthProvider";
+import { getDisplayName } from "@/lib/auth-utils";
+import { signOut } from "@/lib/supabase-auth";
 
 function createBlankProject(
   name: string,
@@ -49,22 +52,51 @@ function createBlankProject(
 }
 
 export default function DashboardPage() {
+  const { user, profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNewProject, setShowNewProject] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectRatio, setNewProjectRatio] = useState<AspectRatio>("16:9");
 
-  function handleCreateProject() {
-    if (!newProjectName.trim()) return;
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProjects(data);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [user]);
+
+  async function handleCreateProject() {
+    if (!newProjectName.trim() || !user) return;
     const project = createBlankProject(newProjectName.trim(), newProjectRatio);
-    setProjects((prev) => [project, ...prev]);
-    setShowNewProject(false);
-    setNewProjectName("");
-    window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`;
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: project.name,
+          aspect_ratio: project.aspectRatio,
+          fps: project.fps,
+          scenes: project.scenes,
+        }),
+      });
+      const saved = await res.json();
+      setShowNewProject(false);
+      setNewProjectName("");
+      window.location.href = `/editor?projectId=${saved.id}`;
+    } catch {
+      // Fallback to URL param if API fails
+      window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`;
+    }
   }
 
-  function handleSelectTemplate(templateId: string) {
+  async function handleSelectTemplate(templateId: string) {
     const template = TEMPLATES.find((t) => t.id === templateId);
     if (!template) return;
     const project: Project = {
@@ -80,13 +112,41 @@ export default function DashboardPage() {
       status: "draft",
       outputUrl: null,
     };
-    setProjects((prev) => [project, ...prev]);
-    setShowTemplates(false);
-    window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`;
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: project.name,
+          description: project.description,
+          aspect_ratio: project.aspectRatio,
+          fps: project.fps,
+          scenes: project.scenes,
+          template_id: project.templateId,
+        }),
+      });
+      const saved = await res.json();
+      setShowTemplates(false);
+      window.location.href = `/editor?projectId=${saved.id}`;
+    } catch {
+      // Fallback to URL param if API fails
+      setShowTemplates(false);
+      window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`;
+    }
   }
 
-  function handleDeleteProject(id: string) {
+  async function handleDeleteProject(id: string) {
+    try {
+      await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    } catch {
+      // Proceed with local removal even if API fails
+    }
     setProjects((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    window.location.reload();
   }
 
   const totalDurationSeconds = (p: Project) =>
@@ -107,6 +167,11 @@ export default function DashboardPage() {
             <h1 className="text-lg font-medium text-[#1a1a1a]">Rentmies Video Editor</h1>
           </div>
           <div className="flex items-center gap-3">
+            {profile && (
+              <span className="text-sm text-[#6b7280]">
+                {getDisplayName(profile)}
+              </span>
+            )}
             <button
               onClick={() => setShowTemplates(true)}
               className="btn-secondary text-sm"
@@ -119,6 +184,14 @@ export default function DashboardPage() {
             >
               New Project
             </button>
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="btn-secondary text-sm"
+              >
+                Sign Out
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -143,7 +216,11 @@ export default function DashboardPage() {
           <h2 className="text-xl font-medium text-[#1a1a1a]">Your Projects</h2>
         </div>
 
-        {projects.length === 0 ? (
+        {loading ? (
+          <div className="bg-white border border-[#e5e5e5] rounded-xl p-16 text-center">
+            <p className="text-[#6b7280]">Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
           <div className="bg-white border border-[#e5e5e5] rounded-xl p-16 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#f8f8f8] mx-auto mb-4 flex items-center justify-center">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b7280]">
@@ -172,7 +249,7 @@ export default function DashboardPage() {
                 key={project.id}
                 className="bg-white border border-[#e5e5e5] rounded-xl p-5 hover:border-[#40d99d] hover:shadow-sm transition-all duration-200 cursor-pointer group"
                 onClick={() =>
-                  (window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`)
+                  (window.location.href = `/editor?projectId=${project.id}`)
                 }
               >
                 <div className="flex items-start justify-between mb-3">

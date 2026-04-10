@@ -52,11 +52,12 @@ function projectToDB(
   };
 }
 
-export async function listUserProjects(): Promise<Project[]> {
+export async function listUserProjects(userId: string): Promise<Project[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("projects")
     .select("*")
+    .eq("user_id", userId)
     .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data as DBProject[]).map(dbToProject);
@@ -86,6 +87,34 @@ export async function createProject(
     .single();
   if (error) throw error;
   return dbToProject(data as DBProject);
+}
+
+export async function createProjectFromFields(fields: {
+  user_id: string;
+  name: string;
+  description?: string;
+  aspect_ratio: string;
+  fps: number;
+  scenes: unknown;
+  template_id?: string;
+}): Promise<DBProject> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("projects")
+    .insert({
+      user_id: fields.user_id,
+      name: fields.name,
+      description: fields.description || "",
+      aspect_ratio: fields.aspect_ratio,
+      fps: fields.fps,
+      scenes: fields.scenes,
+      template_id: fields.template_id || null,
+      status: "draft",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as DBProject;
 }
 
 export async function saveProject(

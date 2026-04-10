@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { EditorProvider, useEditor } from "@/lib/store";
@@ -79,6 +79,27 @@ function createDefaultProject(): Project {
 function EditorContent() {
   const { state, dispatch } = useEditor();
   const [rightPanel, setRightPanel] = useState<"properties" | "captions" | "export" | "templates">("properties");
+
+  // Auto-save to Supabase
+  const projectId = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("projectId")
+    : null;
+
+  useEffect(() => {
+    if (!projectId) return;
+    const timer = setTimeout(() => {
+      fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: state.project.name,
+          scenes: state.project.scenes,
+          status: state.project.status,
+        }),
+      }).catch(() => {});
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [state.project.scenes, state.project.name, state.project.status, projectId]);
 
   const tools: { id: EditorTool; icon: React.ReactNode; label: string }[] = [
     {
@@ -373,18 +394,42 @@ function EditorContent() {
 
 function EditorPageInner() {
   const searchParams = useSearchParams();
+  const [project, setProject] = useState<Project | null>(null);
 
-  const project = useMemo(() => {
+  useEffect(() => {
+    const projectId = searchParams.get("projectId");
     const data = searchParams.get("data");
-    if (data) {
+
+    if (projectId && !data) {
+      // Load from Supabase
+      fetch(`/api/projects/${projectId}`)
+        .then((r) => r.json())
+        .then((p) => {
+          if (p && !p.error) {
+            setProject(p as Project);
+          } else {
+            setProject(createDefaultProject());
+          }
+        })
+        .catch(() => setProject(createDefaultProject()));
+    } else if (data) {
       try {
-        return JSON.parse(decodeURIComponent(data)) as Project;
+        setProject(JSON.parse(decodeURIComponent(data)) as Project);
       } catch {
-        return createDefaultProject();
+        setProject(createDefaultProject());
       }
+    } else {
+      setProject(createDefaultProject());
     }
-    return createDefaultProject();
   }, [searchParams]);
+
+  if (!project) {
+    return (
+      <div className="h-screen flex items-center justify-center text-[#6b7280]">
+        Loading project...
+      </div>
+    );
+  }
 
   return (
     <EditorProvider initialProject={project}>
