@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { renderRequestSchema } from "@/lib/types";
+import { getUser } from "@/lib/supabase-auth";
+import { getUserCredits, deductCredit, isAdminBypass } from "@/lib/credit-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/**
- * Video render API route.
- *
- * In production, this would use @remotion/lambda or @remotion/renderer
- * to render the video server-side. For now, it validates the request,
- * creates a render job record, and returns a job ID for polling.
- *
- * To enable full server-side rendering:
- * 1. Set up a Remotion Lambda function or a server with Chrome/ffmpeg
- * 2. Use @remotion/renderer's renderMedia() with the bundled Remotion project
- * 3. Upload the output to S3/R2 and return the URL
- */
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const { data: { user } } = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Credit check (admins bypass)
+    const isAdmin = await isAdminBypass(user.id);
+    if (!isAdmin) {
+      const credits = await getUserCredits(user.id);
+      if (credits < 1) {
+        return NextResponse.json(
+          { error: "Insufficient credits", creditsRemaining: credits, requiredCredits: 1 },
+          { status: 402 }
+        );
+      }
+      await deductCredit(user.id, 1);
+    }
+
     const body = await request.json();
 
     const parsed = renderRequestSchema.safeParse(body);

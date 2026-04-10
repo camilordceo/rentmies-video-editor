@@ -12,6 +12,7 @@ import CaptionEditor from "@/components/CaptionEditor";
 import ExportPanel from "@/components/ExportPanel";
 import TemplateSelector from "@/components/TemplateSelector";
 import AIPlanner from "@/components/AIPlanner";
+import CreditsBadge from "@/components/CreditsBadge";
 import { TEMPLATES } from "@/lib/templates";
 import { uploadMediaToSupabase } from "@/lib/upload";
 
@@ -361,7 +362,8 @@ function EditorContent() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <CreditsBadge />
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               state.project.status === "completed"

@@ -9,6 +9,7 @@ import { formatTime } from "@/lib/utils";
 import { useAuth } from "@/components/AuthProvider";
 import { getDisplayName } from "@/lib/auth-utils";
 import { signOut } from "@/lib/supabase-auth";
+import CreditsBadge from "@/components/CreditsBadge";
 
 function createBlankProject(
   name: string,
@@ -184,6 +185,7 @@ export default function DashboardPage() {
             >
               New Project
             </button>
+            <CreditsBadge />
             {user && (
               <button
                 onClick={handleSignOut}
