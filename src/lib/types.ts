@@ -181,6 +181,7 @@ export type EditorTool =
   | "text"
   | "media"
   | "caption"
+  | "ai"
   | "template"
   | "export";
 
