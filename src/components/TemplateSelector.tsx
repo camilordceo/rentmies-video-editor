@@ -38,8 +38,8 @@ export default function TemplateSelector({ onSelect }: TemplateSelectorProps) {
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
             activeCategory === null
-              ? "bg-editor-accent text-white"
-              : "bg-editor-panel text-editor-text-muted hover:text-editor-text"
+              ? "bg-[#40d99d] text-white"
+              : "bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a]"
           }`}
         >
           All
@@ -50,8 +50,8 @@ export default function TemplateSelector({ onSelect }: TemplateSelectorProps) {
             onClick={() => setActiveCategory(cat)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               activeCategory === cat
-                ? "bg-editor-accent text-white"
-                : "bg-editor-panel text-editor-text-muted hover:text-editor-text"
+                ? "bg-[#40d99d] text-white"
+                : "bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a]"
             }`}
           >
             {CATEGORY_LABELS[cat] || cat}
@@ -87,11 +87,11 @@ function TemplateCard({
   return (
     <button
       onClick={onSelect}
-      className="text-left panel p-4 hover:border-editor-accent/50 transition-all group"
+      className="text-left panel p-4 hover:border-[#40d99d]/50 transition-all group"
     >
       {/* Preview */}
       <div
-        className={`rounded-lg mb-3 flex items-center justify-center bg-gradient-to-br from-editor-panel to-editor-bg ${
+        className={`rounded-lg mb-3 flex items-center justify-center bg-gradient-to-br from-[#f0f0f0] to-[#f8f8f8] ${
           template.aspectRatio === "9:16" ? "aspect-[9/16] max-h-48 mx-auto" : "aspect-video"
         }`}
       >
@@ -103,7 +103,7 @@ function TemplateCard({
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
-            className="mx-auto text-editor-text-muted group-hover:text-editor-accent transition-colors"
+            className="mx-auto text-[#6b7280] group-hover:text-[#40d99d] transition-colors"
           >
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
@@ -112,23 +112,23 @@ function TemplateCard({
 
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-sm group-hover:text-editor-accent transition-colors">
+          <h3 className="font-semibold text-sm group-hover:text-[#40d99d] transition-colors">
             {template.name}
           </h3>
-          <p className="text-xs text-editor-text-muted mt-1 line-clamp-2">
+          <p className="text-xs text-[#6b7280] mt-1 line-clamp-2">
             {template.description}
           </p>
         </div>
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
-            CATEGORY_COLORS[template.category] || "bg-editor-panel text-editor-text-muted"
+            CATEGORY_COLORS[template.category] || "bg-[#f0f0f0] text-[#6b7280]"
           }`}
         >
           {CATEGORY_LABELS[template.category]}
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-3 text-[10px] text-editor-text-muted">
+      <div className="mt-3 flex items-center gap-3 text-[10px] text-[#6b7280]">
         <span>{template.aspectRatio}</span>
         <span>{sceneCount} scenes</span>
         <span>{durationSec}s</span>

@@ -27,13 +27,12 @@ export default function SceneCard({
   return (
     <div
       onClick={onSelect}
-      className={`p-3 rounded-lg border cursor-pointer transition-all group ${
+      className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 group ${
         isSelected
-          ? "border-editor-accent bg-editor-accent/10"
-          : "border-editor-border hover:border-editor-text-muted bg-editor-panel"
+          ? "border-[#40d99d] bg-[#40d99d]/10"
+          : "border-[#e5e5e5] hover:border-[#40d99d]/50 bg-white"
       }`}
     >
-      {/* Scene thumbnail preview */}
       <div
         className="aspect-video rounded-md mb-2 flex items-center justify-center relative overflow-hidden"
         style={{ backgroundColor: scene.backgroundColor }}
@@ -50,10 +49,10 @@ export default function SceneCard({
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium truncate max-w-[140px]">
+          <p className="text-xs font-medium text-[#1a1a1a] truncate max-w-[140px]">
             {scene.name}
           </p>
-          <p className="text-[10px] text-editor-text-muted mt-0.5">
+          <p className="text-[10px] text-[#6b7280] mt-0.5">
             {formatFrameAsTime(scene.durationFrames, fps)} &middot; {elementCount} element
             {elementCount !== 1 ? "s" : ""}
           </p>
@@ -63,10 +62,10 @@ export default function SceneCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-editor-danger/20 rounded transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all duration-200"
           title="Delete scene"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-editor-danger">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#dc2626]">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>

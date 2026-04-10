@@ -49,12 +49,12 @@ export default function Timeline() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-editor-surface border-r border-editor-border">
+    <div className="h-full flex flex-col bg-[#f8f8f8] border-r border-[#e5e5e5]">
       <div className="panel-header flex items-center justify-between">
         <span>Scenes</span>
         <button
           onClick={handleAddScene}
-          className="text-editor-accent hover:text-editor-accent-hover transition-colors"
+          className="text-[#40d99d] hover:text-[#4fffb4] transition-colors duration-200"
           title="Add scene"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -72,7 +72,7 @@ export default function Timeline() {
               {index > 0 && (
                 <button
                   onClick={() => handleMoveScene(index, "up")}
-                  className="p-0.5 text-editor-text-muted hover:text-editor-text"
+                  className="p-0.5 text-[#6b7280] hover:text-[#1a1a1a]"
                 >
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 8l-6 6h12z" />
@@ -82,7 +82,7 @@ export default function Timeline() {
               {index < project.scenes.length - 1 && (
                 <button
                   onClick={() => handleMoveScene(index, "down")}
-                  className="p-0.5 text-editor-text-muted hover:text-editor-text"
+                  className="p-0.5 text-[#6b7280] hover:text-[#1a1a1a]"
                 >
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 16l6-6H6z" />
@@ -103,10 +103,10 @@ export default function Timeline() {
         ))}
       </div>
 
-      <div className="p-3 border-t border-editor-border">
+      <div className="p-3 border-t border-[#e5e5e5]">
         <button
           onClick={handleAddScene}
-          className="w-full py-2 border border-dashed border-editor-border rounded-lg text-sm text-editor-text-muted hover:border-editor-accent hover:text-editor-accent transition-colors"
+          className="w-full py-2 border border-dashed border-[#e5e5e5] rounded-lg text-sm text-[#6b7280] hover:border-[#40d99d] hover:text-[#40d99d] transition-colors duration-200"
         >
           + Add Scene
         </button>

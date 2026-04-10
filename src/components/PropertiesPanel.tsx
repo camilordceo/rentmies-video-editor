@@ -21,8 +21,8 @@ export default function PropertiesPanel() {
 
   if (!selectedScene) {
     return (
-      <div className="h-full bg-editor-surface border-l border-editor-border flex items-center justify-center p-6">
-        <p className="text-sm text-editor-text-muted text-center">
+      <div className="h-full bg-[#f8f8f8] border-l border-[#e5e5e5] flex items-center justify-center p-6">
+        <p className="text-sm text-[#6b7280] text-center">
           Select a scene to edit its properties
         </p>
       </div>
@@ -38,18 +38,18 @@ export default function PropertiesPanel() {
     : null;
 
   return (
-    <div className="h-full bg-editor-surface border-l border-editor-border flex flex-col overflow-hidden">
+    <div className="h-full bg-[#f8f8f8] border-l border-[#e5e5e5] flex flex-col overflow-hidden">
       <div className="panel-header">Properties</div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Scene Properties */}
         <section>
-          <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
             Scene
           </h3>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-editor-text-muted mb-1 block">Name</label>
+              <label className="text-xs text-[#6b7280] mb-1 block">Name</label>
               <input
                 type="text"
                 value={selectedScene.name}
@@ -65,7 +65,7 @@ export default function PropertiesPanel() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Duration (frames)</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Duration (frames)</label>
                 <input
                   type="number"
                   min={1}
@@ -81,7 +81,7 @@ export default function PropertiesPanel() {
                 />
               </div>
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Background</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Background</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -93,7 +93,7 @@ export default function PropertiesPanel() {
                         updates: { backgroundColor: e.target.value },
                       })
                     }
-                    className="w-8 h-8 rounded border border-editor-border cursor-pointer"
+                    className="w-8 h-8 rounded border border-[#e5e5e5] cursor-pointer"
                   />
                   <input
                     type="text"
@@ -112,7 +112,7 @@ export default function PropertiesPanel() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Transition</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Transition</label>
                 <select
                   value={selectedScene.transition}
                   onChange={(e) =>
@@ -133,7 +133,7 @@ export default function PropertiesPanel() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Trans. Frames</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Trans. Frames</label>
                 <input
                   type="number"
                   min={0}
@@ -157,12 +157,12 @@ export default function PropertiesPanel() {
         {/* Selected Text Element Properties */}
         {selectedText && (
           <section>
-            <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
               Text Element
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Text</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Text</label>
                 <textarea
                   value={selectedText.text}
                   onChange={(e) =>
@@ -179,7 +179,7 @@ export default function PropertiesPanel() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Font Size</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Font Size</label>
                   <input
                     type="number"
                     min={8}
@@ -202,7 +202,7 @@ export default function PropertiesPanel() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Font Weight</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Font Weight</label>
                   <select
                     value={selectedText.style.fontWeight}
                     onChange={(e) =>
@@ -230,7 +230,7 @@ export default function PropertiesPanel() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Color</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -245,15 +245,15 @@ export default function PropertiesPanel() {
                           },
                         })
                       }
-                      className="w-8 h-8 rounded border border-editor-border cursor-pointer"
+                      className="w-8 h-8 rounded border border-[#e5e5e5] cursor-pointer"
                     />
-                    <span className="text-xs font-mono text-editor-text-muted">
+                    <span className="text-xs font-mono text-[#6b7280]">
                       {selectedText.style.color}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Align</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Align</label>
                   <select
                     value={selectedText.style.textAlign}
                     onChange={(e) =>
@@ -279,7 +279,7 @@ export default function PropertiesPanel() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Position X (%)</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Position X (%)</label>
                   <input
                     type="number"
                     min={0}
@@ -299,7 +299,7 @@ export default function PropertiesPanel() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-editor-text-muted mb-1 block">Position Y (%)</label>
+                  <label className="text-xs text-[#6b7280] mb-1 block">Position Y (%)</label>
                   <input
                     type="number"
                     min={0}
@@ -320,7 +320,7 @@ export default function PropertiesPanel() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Animation</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Animation</label>
                 <select
                   value={selectedText.animation}
                   onChange={(e) =>
@@ -359,12 +359,12 @@ export default function PropertiesPanel() {
         {/* Selected Media Element Properties */}
         {selectedMedia && (
           <section>
-            <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
               Media Element
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Name</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Name</label>
                 <input
                   type="text"
                   value={selectedMedia.name}
@@ -373,7 +373,7 @@ export default function PropertiesPanel() {
                 />
               </div>
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Opacity</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Opacity</label>
                 <input
                   type="range"
                   min={0}
@@ -388,11 +388,11 @@ export default function PropertiesPanel() {
                       updates: { opacity: parseFloat(e.target.value) },
                     })
                   }
-                  className="w-full"
+                  className="w-full accent-[#40d99d]"
                 />
               </div>
               <div>
-                <label className="text-xs text-editor-text-muted mb-1 block">Fit</label>
+                <label className="text-xs text-[#6b7280] mb-1 block">Fit</label>
                 <select
                   value={selectedMedia.fit}
                   onChange={(e) =>
@@ -429,12 +429,12 @@ export default function PropertiesPanel() {
         {/* Element list for current scene */}
         {!selectedText && !selectedMedia && (
           <section>
-            <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
               Elements in Scene
             </h3>
             {selectedScene.textElements.length === 0 &&
              selectedScene.mediaElements.length === 0 ? (
-              <p className="text-xs text-editor-text-muted">
+              <p className="text-xs text-[#6b7280]">
                 No elements yet. Use the toolbar to add text or media.
               </p>
             ) : (
@@ -449,7 +449,7 @@ export default function PropertiesPanel() {
                         elementType: "text",
                       })
                     }
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-editor-panel text-sm transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#f0f0f0]/50 text-sm transition-colors duration-200 flex items-center gap-2 text-[#1a1a1a]"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="4 7 4 4 20 4 20 7" />
@@ -457,7 +457,7 @@ export default function PropertiesPanel() {
                       <line x1="12" y1="4" x2="12" y2="20" />
                     </svg>
                     <span className="truncate">{el.text || "Empty text"}</span>
-                    <span className="text-[10px] text-editor-text-muted ml-auto">{el.type}</span>
+                    <span className="text-[10px] text-[#6b7280] ml-auto">{el.type}</span>
                   </button>
                 ))}
                 {selectedScene.mediaElements.map((el) => (
@@ -470,7 +470,7 @@ export default function PropertiesPanel() {
                         elementType: "media",
                       })
                     }
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-editor-panel text-sm transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#f0f0f0]/50 text-sm transition-colors duration-200 flex items-center gap-2 text-[#1a1a1a]"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -478,7 +478,7 @@ export default function PropertiesPanel() {
                       <polyline points="21 15 16 10 5 21" />
                     </svg>
                     <span className="truncate">{el.name}</span>
-                    <span className="text-[10px] text-editor-text-muted ml-auto">{el.type}</span>
+                    <span className="text-[10px] text-[#6b7280] ml-auto">{el.type}</span>
                   </button>
                 ))}
               </div>

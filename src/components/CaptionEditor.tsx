@@ -15,7 +15,7 @@ export default function CaptionEditor() {
 
   if (!selectedScene) {
     return (
-      <div className="p-4 text-sm text-editor-text-muted">
+      <div className="p-4 text-sm text-[#6b7280]">
         Select a scene to manage captions.
       </div>
     );
@@ -98,12 +98,12 @@ export default function CaptionEditor() {
     <div className="flex flex-col h-full">
       <div className="panel-header flex items-center justify-between">
         <span>Captions</span>
-        <span className="text-[10px] font-normal normal-case tracking-normal text-editor-text-muted">
+        <span className="text-[10px] font-normal normal-case tracking-normal text-[#6b7280]">
           {selectedScene.captions.length} segments
         </span>
       </div>
 
-      <div className="p-3 border-b border-editor-border space-y-2">
+      <div className="p-3 border-b border-[#e5e5e5] space-y-2">
         <button
           onClick={handleTranscribe}
           disabled={isTranscribing}
@@ -130,7 +130,7 @@ export default function CaptionEditor() {
         </button>
 
         {error && (
-          <div className="text-xs text-editor-danger bg-editor-danger/10 rounded-lg p-2">
+          <div className="text-xs text-[#dc2626] bg-red-50 border border-red-200 rounded-lg p-2">
             {error}
           </div>
         )}
@@ -138,7 +138,7 @@ export default function CaptionEditor() {
         {/* Caption style controls */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-editor-text-muted block mb-1">Position</label>
+            <label className="text-[10px] text-[#6b7280] block mb-1">Position</label>
             <select
               value={selectedScene.captionStyle.position}
               onChange={(e) =>
@@ -156,7 +156,7 @@ export default function CaptionEditor() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] text-editor-text-muted block mb-1">Animation</label>
+            <label className="text-[10px] text-[#6b7280] block mb-1">Animation</label>
             <select
               value={selectedScene.captionStyle.animation}
               onChange={(e) =>
@@ -180,7 +180,7 @@ export default function CaptionEditor() {
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-editor-text-muted block mb-1">Font Size</label>
+            <label className="text-[10px] text-[#6b7280] block mb-1">Font Size</label>
             <input
               type="number"
               min={16}
@@ -197,7 +197,7 @@ export default function CaptionEditor() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-editor-text-muted block mb-1">Color</label>
+            <label className="text-[10px] text-[#6b7280] block mb-1">Color</label>
             <input
               type="color"
               value={selectedScene.captionStyle.color}
@@ -208,7 +208,7 @@ export default function CaptionEditor() {
                   style: { color: e.target.value },
                 })
               }
-              className="w-full h-7 rounded border border-editor-border cursor-pointer"
+              className="w-full h-7 rounded border border-[#e5e5e5] cursor-pointer"
             />
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function CaptionEditor() {
       {/* Caption segments list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {selectedScene.captions.length === 0 ? (
-          <p className="text-xs text-editor-text-muted text-center py-8">
+          <p className="text-xs text-[#6b7280] text-center py-8">
             No captions yet. Upload an audio or video file to auto-generate captions with AI.
           </p>
         ) : (
@@ -225,15 +225,15 @@ export default function CaptionEditor() {
             {selectedScene.captions.map((caption) => (
               <div
                 key={caption.id}
-                className="bg-editor-panel border border-editor-border rounded-lg p-3 group"
+                className="bg-white border border-[#e5e5e5] rounded-lg p-3 group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-editor-text-muted">
+                  <span className="text-[10px] font-mono text-[#6b7280]">
                     {formatTime(caption.startTime)} - {formatTime(caption.endTime)}
                   </span>
                   <button
                     onClick={() => handleDeleteCaption(caption.id)}
-                    className="opacity-0 group-hover:opacity-100 text-editor-danger transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 text-[#dc2626] transition-opacity"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="18" y1="6" x2="6" y2="18" />
@@ -247,7 +247,7 @@ export default function CaptionEditor() {
                     handleUpdateCaption(caption.id, { text: e.target.value })
                   }
                   rows={2}
-                  className="w-full bg-transparent text-sm resize-none border-none outline-none text-editor-text"
+                  className="w-full bg-transparent text-sm resize-none border-none outline-none text-[#1a1a1a]"
                 />
               </div>
             ))}

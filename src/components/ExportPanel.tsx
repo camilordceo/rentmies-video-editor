@@ -71,34 +71,34 @@ export default function ExportPanel() {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Project Summary */}
         <section>
-          <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
             Project Summary
           </h3>
-          <div className="bg-editor-panel rounded-lg p-3 space-y-2 text-sm">
+          <div className="bg-[#f0f0f0] rounded-lg p-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Resolution</span>
+              <span className="text-[#6b7280]">Resolution</span>
               <span>
                 {resolution.width} x {resolution.height}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Aspect Ratio</span>
+              <span className="text-[#6b7280]">Aspect Ratio</span>
               <span>{project.aspectRatio}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Frame Rate</span>
+              <span className="text-[#6b7280]">Frame Rate</span>
               <span>{project.fps} fps</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Duration</span>
+              <span className="text-[#6b7280]">Duration</span>
               <span>{durationStr}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Scenes</span>
+              <span className="text-[#6b7280]">Scenes</span>
               <span>{project.scenes.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-editor-text-muted">Total Frames</span>
+              <span className="text-[#6b7280]">Total Frames</span>
               <span>{totalFrames}</span>
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function ExportPanel() {
 
         {/* Format */}
         <section>
-          <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
             Output Format
           </h3>
           <div className="grid grid-cols-2 gap-2">
@@ -116,8 +116,8 @@ export default function ExportPanel() {
                 onClick={() => setFormat(f)}
                 className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                   format === f
-                    ? "border-editor-accent bg-editor-accent/10 text-editor-accent"
-                    : "border-editor-border hover:border-editor-text-muted"
+                    ? "border-[#40d99d] bg-[#40d99d]/10 text-[#40d99d]"
+                    : "border-[#e5e5e5] hover:border-[#6b7280]"
                 }`}
               >
                 .{f}
@@ -128,7 +128,7 @@ export default function ExportPanel() {
 
         {/* Quality */}
         <section>
-          <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
             Quality
           </h3>
           <div className="space-y-2">
@@ -138,18 +138,18 @@ export default function ExportPanel() {
                 onClick={() => setQuality(q)}
                 className={`w-full p-3 rounded-lg border text-left transition-colors ${
                   quality === q
-                    ? "border-editor-accent bg-editor-accent/10"
-                    : "border-editor-border hover:border-editor-text-muted"
+                    ? "border-[#40d99d] bg-[#40d99d]/10"
+                    : "border-[#e5e5e5] hover:border-[#6b7280]"
                 }`}
               >
                 <span
                   className={`text-sm font-medium capitalize ${
-                    quality === q ? "text-editor-accent" : ""
+                    quality === q ? "text-[#40d99d]" : ""
                   }`}
                 >
                   {q}
                 </span>
-                <p className="text-[10px] text-editor-text-muted mt-0.5">
+                <p className="text-[10px] text-[#6b7280] mt-0.5">
                   {qualityDescriptions[q]}
                 </p>
               </button>
@@ -184,32 +184,32 @@ export default function ExportPanel() {
 
         {/* Result */}
         {renderResult && (
-          <div className="bg-editor-success/10 border border-editor-success/30 rounded-lg p-3 text-sm">
-            <p className="text-editor-success font-medium mb-1">Render Job Created</p>
-            <p className="text-xs text-editor-text-muted">{renderResult.message}</p>
-            <p className="text-xs text-editor-text-muted mt-1 font-mono">
+          <div className="bg-[#40d99d]/10 border border-[#40d99d]/30 rounded-lg p-3 text-sm">
+            <p className="text-[#40d99d] font-medium mb-1">Render Job Created</p>
+            <p className="text-xs text-[#6b7280]">{renderResult.message}</p>
+            <p className="text-xs text-[#6b7280] mt-1 font-mono">
               Job ID: {renderResult.jobId}
             </p>
           </div>
         )}
 
         {error && (
-          <div className="bg-editor-danger/10 border border-editor-danger/30 rounded-lg p-3 text-sm">
-            <p className="text-editor-danger">{error}</p>
+          <div className="bg-[#dc2626]/10 border border-[#dc2626]/30 rounded-lg p-3 text-sm">
+            <p className="text-[#dc2626]">{error}</p>
           </div>
         )}
 
         {/* Batch Render Info */}
         <section>
-          <h3 className="text-xs font-semibold text-editor-text-muted uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
             Marketing Automation
           </h3>
-          <div className="bg-editor-panel rounded-lg p-3 text-xs text-editor-text-muted space-y-2">
+          <div className="bg-[#f0f0f0] rounded-lg p-3 text-xs text-[#6b7280] space-y-2">
             <p>
               For batch rendering and scheduled publishing, use the render API
               endpoint programmatically:
             </p>
-            <code className="block bg-editor-bg rounded p-2 font-mono text-[10px] overflow-x-auto">
+            <code className="block bg-[#f8f8f8] rounded p-2 font-mono text-[10px] overflow-x-auto">
               POST /api/render
               <br />
               {`{ "projectId": "...", "outputFormat": "mp4", "quality": "high" }`}
