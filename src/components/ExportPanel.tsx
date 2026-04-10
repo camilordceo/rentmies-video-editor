@@ -71,10 +71,10 @@ export default function ExportPanel() {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Project Summary */}
         <section>
-          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
             Project Summary
           </h3>
-          <div className="bg-[#f0f0f0] rounded-lg p-3 space-y-2 text-sm">
+          <div className="bg-white border border-[#e5e5e5] rounded-lg p-3 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[#6b7280]">Resolution</span>
               <span>
@@ -106,7 +106,7 @@ export default function ExportPanel() {
 
         {/* Format */}
         <section>
-          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
             Output Format
           </h3>
           <div className="grid grid-cols-2 gap-2">
@@ -128,7 +128,7 @@ export default function ExportPanel() {
 
         {/* Quality */}
         <section>
-          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
             Quality
           </h3>
           <div className="space-y-2">
@@ -194,22 +194,22 @@ export default function ExportPanel() {
         )}
 
         {error && (
-          <div className="bg-[#dc2626]/10 border border-[#dc2626]/30 rounded-lg p-3 text-sm">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
             <p className="text-[#dc2626]">{error}</p>
           </div>
         )}
 
         {/* Batch Render Info */}
         <section>
-          <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-[#6b7280] uppercase tracking-wider mb-3">
             Marketing Automation
           </h3>
-          <div className="bg-[#f0f0f0] rounded-lg p-3 text-xs text-[#6b7280] space-y-2">
+          <div className="bg-white border border-[#e5e5e5] rounded-lg p-3 text-xs text-[#6b7280] space-y-2">
             <p>
               For batch rendering and scheduled publishing, use the render API
               endpoint programmatically:
             </p>
-            <code className="block bg-[#f8f8f8] rounded p-2 font-mono text-[10px] overflow-x-auto">
+            <code className="block bg-[#f0f0f0] rounded p-2 font-mono text-[10px] overflow-x-auto text-[#1a1a1a]">
               POST /api/render
               <br />
               {`{ "projectId": "...", "outputFormat": "mp4", "quality": "high" }`}

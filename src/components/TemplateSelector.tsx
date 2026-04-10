@@ -16,10 +16,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  youtube: "bg-red-500/20 text-red-400",
-  shorts: "bg-purple-500/20 text-purple-400",
-  marketing: "bg-blue-500/20 text-blue-400",
-  product: "bg-green-500/20 text-green-400",
+  youtube: "bg-red-50 text-red-600",
+  shorts: "bg-[#40d99d]/10 text-[#40d99d]",
+  marketing: "bg-blue-50 text-blue-600",
+  product: "bg-[#40d99d]/10 text-[#40d99d]",
 };
 
 export default function TemplateSelector({ onSelect }: TemplateSelectorProps) {
@@ -87,11 +87,11 @@ function TemplateCard({
   return (
     <button
       onClick={onSelect}
-      className="text-left panel p-4 hover:border-[#40d99d]/50 transition-all group"
+      className="text-left bg-white border border-[#e5e5e5] rounded-xl p-4 hover:border-[#40d99d] hover:shadow-sm transition-all duration-200 group"
     >
       {/* Preview */}
       <div
-        className={`rounded-lg mb-3 flex items-center justify-center bg-gradient-to-br from-[#f0f0f0] to-[#f8f8f8] ${
+        className={`rounded-lg mb-3 flex items-center justify-center bg-gradient-to-br from-[#f8f8f8] to-[#f0f0f0] ${
           template.aspectRatio === "9:16" ? "aspect-[9/16] max-h-48 mx-auto" : "aspect-video"
         }`}
       >
@@ -112,7 +112,7 @@ function TemplateCard({
 
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-sm group-hover:text-[#40d99d] transition-colors">
+          <h3 className="font-medium text-sm text-[#1a1a1a] group-hover:text-[#40d99d] transition-colors duration-200">
             {template.name}
           </h3>
           <p className="text-xs text-[#6b7280] mt-1 line-clamp-2">
