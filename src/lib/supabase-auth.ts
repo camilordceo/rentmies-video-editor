@@ -12,13 +12,17 @@ export async function signInWithPassword(email: string, password: string) {
   return client.auth.signInWithPassword({ email, password });
 }
 
-export async function signUp(email: string, password: string, displayName?: string) {
+/**
+ * Sign up a new user. The `nombre` field maps to the existing
+ * profiles.nombre column in the Rentmies Supabase schema.
+ */
+export async function signUp(email: string, password: string, nombre?: string) {
   const client = getAuthClient();
   return client.auth.signUp({
     email,
     password,
     options: {
-      data: { display_name: displayName || email.split("@")[0] },
+      data: { nombre: nombre || email.split("@")[0] },
     },
   });
 }

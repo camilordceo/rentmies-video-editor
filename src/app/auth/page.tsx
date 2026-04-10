@@ -9,7 +9,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [nombre, setNombre] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -30,7 +30,7 @@ export default function AuthPage() {
           router.refresh();
         }
       } else {
-        const { error } = await signUp(email, password, displayName);
+        const { error } = await signUp(email, password, nombre);
         if (error) {
           setError(error.message);
         } else {
@@ -101,11 +101,11 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
               <div>
-                <label className="block text-sm text-editor-text-muted mb-1.5">Display Name</label>
+                <label className="block text-sm text-editor-text-muted mb-1.5">Name</label>
                 <input
                   type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
                   placeholder="Your name"
                   className="input-field"
                 />

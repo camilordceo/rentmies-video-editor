@@ -1,5 +1,6 @@
--- ContentOS Database Schema
--- Videos, Content Ideas, Assets, and Hooks
+-- ContentOS Base Schema
+-- SAFE: Uses "if not exists" for all tables. Only creates what's missing.
+-- Your existing videos, content_ideas, assets, hooks tables are preserved.
 
 -- Videos produced
 create table if not exists videos (
@@ -63,19 +64,13 @@ create table if not exists hooks (
   created_at timestamptz default now()
 );
 
--- Enable RLS
+-- Enable RLS (safe to call multiple times)
 alter table videos enable row level security;
 alter table content_ideas enable row level security;
 alter table assets enable row level security;
 alter table hooks enable row level security;
 
--- Allow anon read/write for now (single-user app)
-create policy "Allow all on videos" on videos for all using (true) with check (true);
-create policy "Allow all on content_ideas" on content_ideas for all using (true) with check (true);
-create policy "Allow all on assets" on assets for all using (true) with check (true);
-create policy "Allow all on hooks" on hooks for all using (true) with check (true);
-
--- Updated_at trigger
+-- Updated_at trigger function (safe: create or replace)
 create or replace function update_updated_at()
 returns trigger as $$
 begin
@@ -83,7 +78,3 @@ begin
   return new;
 end;
 $$ language plpgsql;
-
-create trigger videos_updated_at
-  before update on videos
-  for each row execute function update_updated_at();
