@@ -93,18 +93,18 @@ export default function DashboardPage() {
     p.scenes.reduce((acc, s) => acc + s.durationFrames, 0) / p.fps;
 
   return (
-    <div className="min-h-screen bg-editor-bg">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-editor-border bg-editor-surface/50 backdrop-blur-sm sticky top-0 z-40">
+      <header className="border-b border-[#e5e5e5] bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-editor-accent flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#40d99d] flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="23 7 16 12 23 17 23 7" />
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-editor-text">Rentmies Video Editor</h1>
+            <h1 className="text-lg font-medium text-[#1a1a1a]">Rentmies Video Editor</h1>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -131,28 +131,28 @@ export default function DashboardPage() {
             { label: "Draft", value: projects.filter((p) => p.status === "draft").length.toString() },
             { label: "Completed", value: projects.filter((p) => p.status === "completed").length.toString() },
           ].map((stat) => (
-            <div key={stat.label} className="panel p-5">
-              <p className="text-editor-text-muted text-sm">{stat.label}</p>
-              <p className="text-2xl font-bold mt-1">{stat.value}</p>
+            <div key={stat.label} className="bg-white border border-[#e5e5e5] rounded-xl p-5">
+              <p className="text-[#6b7280] text-sm">{stat.label}</p>
+              <p className="text-2xl font-medium text-[#1a1a1a] mt-1">{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Projects List */}
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Your Projects</h2>
+          <h2 className="text-xl font-medium text-[#1a1a1a]">Your Projects</h2>
         </div>
 
         {projects.length === 0 ? (
-          <div className="panel p-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-editor-panel mx-auto mb-4 flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-editor-text-muted">
+          <div className="bg-white border border-[#e5e5e5] rounded-xl p-16 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#f8f8f8] mx-auto mb-4 flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#6b7280]">
                 <polygon points="23 7 16 12 23 17 23 7" />
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
-            <p className="text-editor-text-muted mb-6 max-w-md mx-auto">
+            <h3 className="text-lg font-medium text-[#1a1a1a] mb-2">No projects yet</h3>
+            <p className="text-[#6b7280] mb-6 max-w-md mx-auto">
               Create your first video project from scratch or start with a pre-built template
               for YouTube Shorts, standard videos, or marketing content.
             </p>
@@ -170,17 +170,17 @@ export default function DashboardPage() {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="panel p-5 hover:border-editor-accent/50 transition-colors cursor-pointer group"
+                className="bg-white border border-[#e5e5e5] rounded-xl p-5 hover:border-[#40d99d] hover:shadow-sm transition-all duration-200 cursor-pointer group"
                 onClick={() =>
                   (window.location.href = `/editor?projectId=${project.id}&data=${encodeURIComponent(JSON.stringify(project))}`)
                 }
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold group-hover:text-editor-accent transition-colors">
+                    <h3 className="font-medium text-[#1a1a1a] group-hover:text-[#40d99d] transition-colors duration-200">
                       {project.name}
                     </h3>
-                    <p className="text-xs text-editor-text-muted mt-1">
+                    <p className="text-xs text-[#6b7280] mt-1">
                       {project.aspectRatio} &middot; {project.scenes.length} scene
                       {project.scenes.length !== 1 ? "s" : ""} &middot;{" "}
                       {formatTime(totalDurationSeconds(project))}
@@ -189,22 +189,22 @@ export default function DashboardPage() {
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       project.status === "completed"
-                        ? "bg-editor-success/20 text-editor-success"
+                        ? "bg-[#40d99d]/10 text-[#40d99d]"
                         : project.status === "rendering"
-                        ? "bg-editor-warning/20 text-editor-warning"
-                        : "bg-editor-panel text-editor-text-muted"
+                        ? "bg-amber-50 text-amber-500"
+                        : "bg-[#f0f0f0] text-[#6b7280]"
                     }`}
                   >
                     {project.status}
                   </span>
                 </div>
-                <div className="aspect-video bg-editor-bg rounded-lg mb-3 flex items-center justify-center">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-editor-border">
+                <div className="aspect-video bg-[#f8f8f8] rounded-lg mb-3 flex items-center justify-center">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-[#e5e5e5]">
                     <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-editor-text-muted">
+                  <span className="text-xs text-[#6b7280]">
                     {new Date(project.updatedAt).toLocaleDateString()}
                   </span>
                   <button
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                       e.stopPropagation();
                       handleDeleteProject(project.id);
                     }}
-                    className="text-xs text-editor-text-muted hover:text-editor-danger transition-colors"
+                    className="text-xs text-[#6b7280] hover:text-[#dc2626] transition-colors duration-200"
                   >
                     Delete
                   </button>
@@ -225,12 +225,12 @@ export default function DashboardPage() {
 
       {/* New Project Modal */}
       {showNewProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="panel p-6 w-full max-w-md fade-in">
-            <h2 className="text-lg font-semibold mb-4">Create New Project</h2>
+        <div className="fixed inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 w-full max-w-md fade-in shadow-sm">
+            <h2 className="text-lg font-medium text-[#1a1a1a] mb-4">Create New Project</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-editor-text-muted mb-1.5">
+                <label className="block text-sm text-[#6b7280] mb-1.5">
                   Project Name
                 </label>
                 <input
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-editor-text-muted mb-1.5">
+                <label className="block text-sm text-[#6b7280] mb-1.5">
                   Aspect Ratio
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -253,10 +253,10 @@ export default function DashboardPage() {
                       <button
                         key={ratio}
                         onClick={() => setNewProjectRatio(ratio)}
-                        className={`p-3 rounded-lg border text-center text-sm font-medium transition-colors ${
+                        className={`p-3 rounded-lg border text-center text-sm font-medium transition-all duration-200 ${
                           newProjectRatio === ratio
-                            ? "border-editor-accent bg-editor-accent/10 text-editor-accent"
-                            : "border-editor-border hover:border-editor-text-muted"
+                            ? "border-[#40d99d] bg-[#40d99d]/10 text-[#40d99d]"
+                            : "border-[#e5e5e5] hover:border-[#6b7280] text-[#1a1a1a]"
                         }`}
                       >
                         {ratio}
@@ -283,13 +283,13 @@ export default function DashboardPage() {
 
       {/* Template Selector Modal */}
       {showTemplates && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="panel p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto fade-in">
+        <div className="fixed inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e5e5e5] rounded-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto fade-in shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Choose a Template</h2>
+              <h2 className="text-lg font-medium text-[#1a1a1a]">Choose a Template</h2>
               <button
                 onClick={() => setShowTemplates(false)}
-                className="text-editor-text-muted hover:text-editor-text transition-colors"
+                className="text-[#6b7280] hover:text-[#1a1a1a] transition-colors duration-200"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />

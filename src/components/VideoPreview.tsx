@@ -39,10 +39,10 @@ export default function VideoPreview() {
   return (
     <div className="flex flex-col h-full">
       {/* Preview Area */}
-      <div className="flex-1 flex items-center justify-center bg-editor-bg p-4 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center bg-[#f8f8f8] p-4 overflow-hidden">
         <div
           style={containerStyle}
-          className="relative bg-black rounded-lg overflow-hidden shadow-2xl w-full h-full max-h-full"
+          className="relative bg-[#1a1a1a] rounded-lg overflow-hidden shadow-sm w-full h-full max-h-full"
         >
           {totalFrames > 0 ? (
             <Player
@@ -62,7 +62,7 @@ export default function VideoPreview() {
               autoPlay={false}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-editor-text-muted">
+            <div className="w-full h-full flex items-center justify-center text-[#6b7280]">
               <p>Add a scene to get started</p>
             </div>
           )}
@@ -70,7 +70,7 @@ export default function VideoPreview() {
       </div>
 
       {/* Transport Controls */}
-      <div className="bg-editor-surface border-t border-editor-border px-4 py-3">
+      <div className="bg-white border-t border-[#e5e5e5] px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -78,7 +78,7 @@ export default function VideoPreview() {
                 playerRef.current?.seekTo(0);
                 dispatch({ type: "SET_FRAME", frame: 0 });
               }}
-              className="p-2 hover:bg-editor-panel rounded-lg transition-colors"
+              className="p-2 hover:bg-[#f0f0f0]/50 rounded-lg transition-colors duration-200 text-[#1a1a1a]"
               title="Go to start"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -93,7 +93,7 @@ export default function VideoPreview() {
                   playerRef.current?.play();
                 }
               }}
-              className="p-2 px-4 bg-editor-accent hover:bg-editor-accent-hover rounded-lg transition-colors"
+              className="p-2 px-4 bg-[#40d99d] hover:bg-[#4fffb4] text-white rounded-lg transition-colors duration-200"
               title={state.isPlaying ? "Pause" : "Play"}
             >
               {state.isPlaying ? (
@@ -111,7 +111,7 @@ export default function VideoPreview() {
                 playerRef.current?.seekTo(Math.max(totalFrames - 1, 0));
                 dispatch({ type: "SET_FRAME", frame: Math.max(totalFrames - 1, 0) });
               }}
-              className="p-2 hover:bg-editor-panel rounded-lg transition-colors"
+              className="p-2 hover:bg-[#f0f0f0]/50 rounded-lg transition-colors duration-200 text-[#1a1a1a]"
               title="Go to end"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -121,11 +121,11 @@ export default function VideoPreview() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-editor-text-muted">
+            <span className="text-xs font-mono text-[#6b7280]">
               {formatFrameAsTime(state.currentFrame, project.fps)} /{" "}
               {formatFrameAsTime(totalFrames, project.fps)}
             </span>
-            <span className="text-xs text-editor-text-muted">
+            <span className="text-xs text-[#6b7280]">
               {project.aspectRatio} &middot; {project.fps}fps
             </span>
           </div>

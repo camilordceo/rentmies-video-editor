@@ -12,6 +12,7 @@ import CaptionEditor from "@/components/CaptionEditor";
 import ExportPanel from "@/components/ExportPanel";
 import TemplateSelector from "@/components/TemplateSelector";
 import { TEMPLATES } from "@/lib/templates";
+import { uploadMediaToSupabase } from "@/lib/upload";
 
 function createDefaultProject(): Project {
   return {
@@ -214,15 +215,27 @@ function EditorContent() {
     if (!state.selectedSceneId) return;
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
+    input.accept = "image/*,video/mp4,video/webm,video/quicktime";
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
+
+      const mediaType = file.type.startsWith("video/") ? "video" : "image";
+
+      // Upload to Supabase Storage
+      let src: string;
+      try {
+        const { publicUrl } = await uploadMediaToSupabase(file);
+        src = publicUrl;
+      } catch {
+        // Fallback to blob URL if upload fails
+        src = URL.createObjectURL(file);
+      }
+
       const newMedia: MediaElement = {
         id: uuidv4(),
-        type: "image",
-        src: url,
+        type: mediaType,
+        src,
         name: file.name,
         position: { x: 0, y: 0 },
         size: { width: 100, height: 100 },
@@ -230,6 +243,7 @@ function EditorContent() {
         durationFrames: 150,
         opacity: 1,
         fit: "cover",
+        volume: mediaType === "video" ? 1 : undefined,
       };
       dispatch({
         type: "ADD_MEDIA_ELEMENT",
@@ -263,22 +277,22 @@ function EditorContent() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-editor-bg">
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-white">
       {/* Top Toolbar */}
-      <header className="h-14 bg-editor-surface border-b border-editor-border flex items-center justify-between px-4 shrink-0">
+      <header className="h-14 bg-white border-b border-[#e5e5e5] flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
           <a
             href="/"
-            className="flex items-center gap-2 text-editor-text-muted hover:text-editor-text transition-colors"
+            className="flex items-center gap-2 text-[#6b7280] hover:text-[#1a1a1a] transition-colors duration-200"
           >
-            <div className="w-7 h-7 rounded-lg bg-editor-accent flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#40d99d] flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                 <polygon points="23 7 16 12 23 17 23 7" />
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
               </svg>
             </div>
           </a>
-          <div className="h-6 w-px bg-editor-border" />
+          <div className="h-6 w-px bg-[#e5e5e5]" />
           <input
             type="text"
             value={state.project.name}
@@ -288,7 +302,7 @@ function EditorContent() {
                 updates: { name: e.target.value },
               })
             }
-            className="bg-transparent border-none text-sm font-medium focus:outline-none focus:ring-1 focus:ring-editor-accent rounded px-2 py-1"
+            className="bg-transparent border-none text-sm font-medium text-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#40d99d] rounded px-2 py-1"
           />
         </div>
 
@@ -298,10 +312,10 @@ function EditorContent() {
             <button
               key={tool.id}
               onClick={() => handleToolClick(tool.id)}
-              className={`p-2 rounded-lg transition-colors relative group ${
+              className={`p-2 rounded-lg transition-all duration-200 relative group ${
                 state.activeTool === tool.id
-                  ? "bg-editor-accent text-white"
-                  : "text-editor-text-muted hover:text-editor-text hover:bg-editor-panel"
+                  ? "bg-[#40d99d] text-white"
+                  : "text-[#6b7280] hover:text-[#1a1a1a] hover:bg-[#f0f0f0]/50"
               }`}
               title={tool.label}
             >
@@ -317,8 +331,8 @@ function EditorContent() {
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               state.project.status === "completed"
-                ? "bg-editor-success/20 text-editor-success"
-                : "bg-editor-panel text-editor-text-muted"
+                ? "bg-[#40d99d]/10 text-[#40d99d]"
+                : "bg-[#f0f0f0] text-[#6b7280]"
             }`}
           >
             {state.project.status}
@@ -344,7 +358,7 @@ function EditorContent() {
           {rightPanel === "captions" && <CaptionEditor />}
           {rightPanel === "export" && <ExportPanel />}
           {rightPanel === "templates" && (
-            <div className="h-full bg-editor-surface border-l border-editor-border flex flex-col overflow-hidden">
+            <div className="h-full bg-[#f8f8f8] border-l border-[#e5e5e5] flex flex-col overflow-hidden">
               <div className="panel-header">Templates</div>
               <div className="flex-1 overflow-y-auto p-4">
                 <TemplateSelector onSelect={handleSelectTemplate} />
@@ -383,8 +397,8 @@ export default function EditorPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen w-screen bg-editor-bg flex items-center justify-center">
-          <div className="text-editor-text-muted text-sm">Loading editor...</div>
+        <div className="h-screen w-screen bg-white flex items-center justify-center">
+          <div className="text-[#6b7280] text-sm">Loading editor...</div>
         </div>
       }
     >

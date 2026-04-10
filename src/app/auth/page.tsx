@@ -46,40 +46,40 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-white to-[#f0f0f0]/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-editor-accent flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-xl bg-[#40d99d] flex items-center justify-center mx-auto mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-editor-text">Rentmies ContentOS</h1>
-          <p className="text-editor-text-muted mt-1 text-sm">AI-powered video editor for creators</p>
+          <h1 className="text-2xl font-medium text-[#1a1a1a]">Rentmies ContentOS</h1>
+          <p className="text-[#6b7280] mt-1 text-sm">AI-powered video editor for creators</p>
         </div>
 
         {/* Form Card */}
-        <div className="panel p-6">
+        <div className="bg-white border border-[#e5e5e5] rounded-xl p-6">
           {/* Tab Switcher */}
-          <div className="flex mb-6 bg-editor-bg rounded-lg p-1">
+          <div className="flex mb-6 bg-[#f0f0f0] rounded-lg p-1">
             <button
               onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                 mode === "login"
-                  ? "bg-editor-accent text-white shadow-sm"
-                  : "text-editor-text-muted hover:text-editor-text"
+                  ? "bg-[#40d99d] text-white shadow-sm"
+                  : "text-[#6b7280] hover:text-[#1a1a1a]"
               }`}
             >
               Log In
             </button>
             <button
               onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                 mode === "signup"
-                  ? "bg-editor-accent text-white shadow-sm"
-                  : "text-editor-text-muted hover:text-editor-text"
+                  ? "bg-[#40d99d] text-white shadow-sm"
+                  : "text-[#6b7280] hover:text-[#1a1a1a]"
               }`}
             >
               Sign Up
@@ -88,12 +88,12 @@ export default function AuthPage() {
 
           {/* Error / Success Messages */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-editor-danger/10 border border-editor-danger/20 text-editor-danger text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 p-3 rounded-lg bg-editor-success/10 border border-editor-success/20 text-editor-success text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-[#40d99d]/10 border border-[#40d99d]/20 text-[#40d99d] text-sm">
               {success}
             </div>
           )}
@@ -101,7 +101,7 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
               <div>
-                <label className="block text-sm text-editor-text-muted mb-1.5">Name</label>
+                <label className="block text-sm text-[#6b7280] mb-1.5">Name</label>
                 <input
                   type="text"
                   value={nombre}
@@ -112,7 +112,7 @@ export default function AuthPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm text-editor-text-muted mb-1.5">Email</label>
+              <label className="block text-sm text-[#6b7280] mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -124,7 +124,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-editor-text-muted mb-1.5">Password</label>
+              <label className="block text-sm text-[#6b7280] mb-1.5">Password</label>
               <input
                 type="password"
                 value={password}
@@ -157,10 +157,10 @@ export default function AuthPage() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-editor-border" />
+              <div className="w-full border-t border-[#e5e5e5]" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-editor-surface px-2 text-editor-text-muted">or continue with</span>
+              <span className="bg-white px-2 text-[#6b7280]">or continue with</span>
             </div>
           </div>
 
@@ -180,7 +180,7 @@ export default function AuthPage() {
           </button>
         </div>
 
-        <p className="text-center text-xs text-editor-text-muted mt-6">
+        <p className="text-center text-xs text-[#6b7280] mt-6">
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

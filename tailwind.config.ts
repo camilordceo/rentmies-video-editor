@@ -9,18 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          teal: "#40d99d",
+          mint: "#4fffb4",
+          black: "#1a1a1a",
+        },
         editor: {
-          bg: "#0a0a0f",
-          surface: "#13131a",
-          panel: "#1a1a24",
-          border: "#2a2a3a",
-          accent: "#6366f1",
-          "accent-hover": "#818cf8",
-          text: "#e2e8f0",
-          "text-muted": "#94a3b8",
-          success: "#22c55e",
+          bg: "#ffffff",
+          surface: "#f8f8f8",
+          panel: "#ffffff",
+          border: "#e5e5e5",
+          accent: "#40d99d",
+          "accent-hover": "#4fffb4",
+          text: "#1a1a1a",
+          "text-muted": "#6b7280",
+          success: "#40d99d",
           warning: "#f59e0b",
-          danger: "#ef4444",
+          danger: "#dc2626",
         },
       },
       fontFamily: {
