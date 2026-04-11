@@ -1,24 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let _client: SupabaseClient | null = null;
 
-function getAuthClient() {
-  return createClient(supabaseUrl, supabaseAnonKey);
+function getAuthClient(): SupabaseClient {
+  if (_client) return _client;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Supabase env vars not set");
+  _client = createClient(url, key, {
+    auth: {
+      persistSession: true,
+      storageKey: "sb-auth-token",
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    },
+  });
+  return _client;
 }
 
 export async function signInWithPassword(email: string, password: string) {
-  const client = getAuthClient();
-  return client.auth.signInWithPassword({ email, password });
+  return getAuthClient().auth.signInWithPassword({ email, password });
 }
 
-/**
- * Sign up a new user. The `nombre` field maps to the existing
- * profiles.nombre column in the Rentmies Supabase schema.
- */
 export async function signUp(email: string, password: string, nombre?: string) {
-  const client = getAuthClient();
-  return client.auth.signUp({
+  return getAuthClient().auth.signUp({
     email,
     password,
     options: {
@@ -28,28 +32,23 @@ export async function signUp(email: string, password: string, nombre?: string) {
 }
 
 export async function signOut() {
-  const client = getAuthClient();
-  return client.auth.signOut();
+  return getAuthClient().auth.signOut();
 }
 
 export async function getSession() {
-  const client = getAuthClient();
-  return client.auth.getSession();
+  return getAuthClient().auth.getSession();
 }
 
 export async function getUser() {
-  const client = getAuthClient();
-  return client.auth.getUser();
+  return getAuthClient().auth.getUser();
 }
 
 export function onAuthStateChange(callback: (event: string, session: any) => void) {
-  const client = getAuthClient();
-  return client.auth.onAuthStateChange(callback);
+  return getAuthClient().auth.onAuthStateChange(callback);
 }
 
 export async function getProfile(userId: string) {
-  const client = getAuthClient();
-  const { data, error } = await client
+  const { data, error } = await getAuthClient()
     .from("profiles")
     .select("*")
     .eq("id", userId)

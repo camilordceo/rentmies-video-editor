@@ -3,12 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow auth routes, API routes, and static assets through
+  // Allow auth routes, API routes, static assets, and pricing through
   if (
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
+    pathname === "/pricing" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml"
   ) {
@@ -16,19 +17,16 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check for Supabase auth cookie
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next();
-  }
-
-  // Look for the Supabase auth token in cookies
-  const authCookie = request.cookies.getAll().find(
-    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+  // Supabase stores tokens in cookies with names like:
+  // sb-<project-ref>-auth-token (old format)
+  // sb-<project-ref>-auth-token.0, sb-<project-ref>-auth-token.1 (chunked)
+  const cookies = request.cookies.getAll();
+  const hasAuthCookie = cookies.some(
+    (c) => c.name.includes("-auth-token")
   );
 
-  if (!authCookie) {
+  if (!hasAuthCookie) {
+    // No cookie found — redirect to login
     const loginUrl = new URL("/auth", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);

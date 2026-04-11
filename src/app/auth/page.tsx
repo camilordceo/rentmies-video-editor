@@ -26,8 +26,9 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
-          router.push("/");
-          router.refresh();
+          // Use window.location for a full page reload so cookies are set
+          // before middleware checks the session
+          window.location.href = "/";
         }
       } else {
         const { error } = await signUp(email, password, nombre);
