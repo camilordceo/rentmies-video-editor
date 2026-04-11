@@ -26,8 +26,8 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
-          // Use window.location for a full page reload so cookies are set
-          // before middleware checks the session
+          // Small delay to let Supabase persist the session
+          await new Promise(r => setTimeout(r, 500));
           window.location.href = "/";
         }
       } else {
