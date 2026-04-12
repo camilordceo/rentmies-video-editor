@@ -25,26 +25,28 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANTE: no usar getSession() aquí — usa getUser() que valida contra el servidor
+  // Refresca la sesión si existe — crítico para que las cookies se mantengan vivas
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
 
-  // Rutas siempre públicas
-  const isPublic =
+  // Rutas siempre públicas — NO requieren sesión
+  const isPublicPath =
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/webhooks') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon')
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/_next')
 
-  if (!user && !isPublic) {
+  // Si no hay sesión y la ruta requiere auth → redirigir a /auth
+  if (!user && !isPublicPath) {
     const loginUrl = new URL('/auth', request.url)
+    // Guardar la URL de destino para redirigir después del login
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si ya está autenticado y va a /auth, redirigir al home
+  // Si ya tiene sesión y va a /auth → redirigir al dashboard
   if (user && pathname === '/auth') {
     return NextResponse.redirect(new URL('/', request.url))
   }
@@ -54,10 +56,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Excluir archivos estáticos y _next internals.
-     * Aplica a todas las páginas y API routes.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 }

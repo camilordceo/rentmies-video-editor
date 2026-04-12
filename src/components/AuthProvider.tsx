@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getSession, getProfile, onAuthStateChange } from "@/lib/supabase-auth";
+import { getUser, getProfile, onAuthStateChange } from "@/lib/supabase-auth";
 import { isAdminUser, type UserProfile } from "@/lib/auth-utils";
 
 interface AuthState {
@@ -29,11 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadAuth() {
       try {
-        const { data: { session } } = await getSession();
-        if (session?.user) {
-          const profile = await getProfile(session.user.id);
+        // getUser() valida la sesión contra el servidor (más seguro que getSession)
+        const { data: { user } } = await getUser();
+        if (user) {
+          const profile = await getProfile(user.id);
           setState({
-            user: { id: session.user.id, email: session.user.email || "" },
+            user: { id: user.id, email: user.email ?? "" },
             profile: profile as UserProfile | null,
             isAdmin: isAdminUser(profile as UserProfile | null),
             isLoading: false,
@@ -48,11 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadAuth();
 
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const profile = await getProfile(session.user.id);
+    const { data: { subscription } } = onAuthStateChange(async (_event, session) => {
+      const s = session as { user?: { id: string; email?: string } } | null;
+      if (s?.user) {
+        const profile = await getProfile(s.user.id);
         setState({
-          user: { id: session.user.id, email: session.user.email || "" },
+          user: { id: s.user.id, email: s.user.email ?? "" },
           profile: profile as UserProfile | null,
           isAdmin: isAdminUser(profile as UserProfile | null),
           isLoading: false,

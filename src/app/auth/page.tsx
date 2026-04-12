@@ -24,6 +24,10 @@ function VideoIcon() {
 export default function AuthPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  // Leer el parámetro ?next= para redirigir después del login
+  const nextPath = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("next") ?? "/"
+    : "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
@@ -43,8 +47,10 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
-          await new Promise((r) => setTimeout(r, 400));
-          router.push("/");
+          // Pequeño delay para que createBrowserClient escriba la cookie antes de navegar
+          await new Promise((r) => setTimeout(r, 500));
+          router.push(nextPath);
+          router.refresh();
         }
       } else {
         const { error } = await signUp(email, password, nombre);
