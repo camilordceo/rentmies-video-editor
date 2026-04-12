@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user } = auth
   const admin = createAdminClient()
@@ -44,7 +44,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user } = auth
 
@@ -97,7 +97,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user } = auth
   const admin = createAdminClient()

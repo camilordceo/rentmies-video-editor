@@ -5,7 +5,7 @@ import type { Scene } from '@/lib/types'
 
 export async function GET() {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user } = auth
   const admin = createAdminClient()
@@ -40,7 +40,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user, profile } = auth
 

@@ -8,7 +8,7 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   // 1. Auth guard
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user, profile } = auth
 
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   const { user } = auth
   const renderId = req.nextUrl.searchParams.get('id')

@@ -8,7 +8,7 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   // Auth guard — siempre primero
   const auth = await requireAuth()
-  if (auth.error) return auth.error
+  if (!auth.ok) return auth.error
 
   try {
     const formData = await req.formData()
