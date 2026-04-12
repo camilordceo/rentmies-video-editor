@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Excluir @remotion/renderer del bundle del servidor
+  // (es demasiado pesado para Vercel serverless)
+  serverExternalPackages: ["@remotion/renderer"],
+
   webpack: (config, { isServer }) => {
-    // Handle Remotion's dependencies in the client bundle
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -12,7 +15,7 @@ const nextConfig = {
       };
     }
 
-    // Allow importing video/audio files
+    // Permitir importar archivos de video/audio
     config.module.rules.push({
       test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)$/,
       type: "asset/resource",
@@ -23,11 +26,12 @@ const nextConfig = {
 
     return config;
   },
+
   images: {
-    domains: ["localhost", "kkqzzdtdkrxdlfrllauy.supabase.co"],
-  },
-  experimental: {
-    serverComponentsExternalPackages: ["@remotion/renderer"],
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "http", hostname: "localhost" },
+    ],
   },
 };
 
