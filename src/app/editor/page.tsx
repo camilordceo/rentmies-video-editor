@@ -273,6 +273,7 @@ function EditorContent() {
           file,
           userId: user?.id,
           projectId: projectId ?? undefined,
+          onStep: (s) => setUploadStatus(`${file.name} · ${s}`),
         });
         // signedUrl para videos privados; publicUrl si el bucket es público
         src = result.signedUrl || result.publicUrl;

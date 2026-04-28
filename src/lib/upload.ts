@@ -55,24 +55,50 @@ function sanitizeFilename(name: string): string {
 
 async function probeVideoDuration(file: File): Promise<number | undefined> {
   return new Promise((resolve) => {
-    try {
-      const url = URL.createObjectURL(file)
-      const v = document.createElement('video')
-      v.preload = 'metadata'
-      v.muted = true
-      const cleanup = () => {
-        try { URL.revokeObjectURL(url) } catch { /* noop */ }
-      }
-      v.onloadedmetadata = () => {
-        const d = isFinite(v.duration) ? v.duration : undefined
-        cleanup()
-        resolve(d)
-      }
-      v.onerror = () => { cleanup(); resolve(undefined) }
-      v.src = url
-    } catch {
-      resolve(undefined)
+    let settled = false
+    const finish = (d: number | undefined) => {
+      if (settled) return
+      settled = true
+      resolve(d)
     }
+
+    let url: string | null = null
+    try {
+      url = URL.createObjectURL(file)
+    } catch {
+      return finish(undefined)
+    }
+
+    const v = document.createElement('video')
+    v.preload = 'metadata'
+    v.muted = true
+
+    const cleanup = () => {
+      try { if (url) URL.revokeObjectURL(url) } catch { /* noop */ }
+      try { v.removeAttribute('src'); v.load() } catch { /* noop */ }
+    }
+
+    // Timeout: si el codec no es soportado (HEVC en iPhone) onloadedmetadata
+    // nunca se dispara — no bloquear el upload por esto.
+    const timer = setTimeout(() => {
+      cleanup()
+      finish(undefined)
+    }, 4000)
+
+    v.onloadedmetadata = () => {
+      clearTimeout(timer)
+      const d = isFinite(v.duration) ? v.duration : undefined
+      cleanup()
+      finish(d)
+    }
+
+    v.onerror = () => {
+      clearTimeout(timer)
+      cleanup()
+      finish(undefined)
+    }
+
+    v.src = url
   })
 }
 
@@ -88,8 +114,10 @@ export async function uploadSourceVideo(opts: {
   file: File
   projectId: string
   userId?: string  // opcional — si no se pasa, lo lee del cliente
+  onStep?: (step: string) => void
 }): Promise<UploadResult> {
-  const { file, projectId } = opts
+  const { file, projectId, onStep } = opts
+  const step = (s: string) => { onStep?.(s) }
 
   if (!ALLOWED_VIDEO_MIME.has(file.type)) {
     throw new Error(`Formato no soportado: ${file.type || 'desconocido'}. Usa MP4, WebM o MOV.`)
@@ -98,13 +126,18 @@ export async function uploadSourceVideo(opts: {
     throw new Error(`El video pesa ${(file.size / 1024 / 1024).toFixed(0)}MB. Máximo 500MB.`)
   }
 
+  step('Verificando sesión…')
   const supabase = createClient()
   const userId = opts.userId ?? (await getCurrentUserId(supabase))
+
   const filename = sanitizeFilename(file.name)
   const path = `${userId}/${projectId}/${filename}`
 
+  // Probe de duración con timeout — best-effort, no bloquea si falla
+  step('Leyendo metadata…')
   const durationSeconds = await probeVideoDuration(file)
 
+  step(`Subiendo a Storage (${formatFileSize(file.size)})…`)
   const { error: upErr } = await supabase.storage
     .from(SOURCE_BUCKET)
     .upload(path, file, {
@@ -115,6 +148,7 @@ export async function uploadSourceVideo(opts: {
 
   if (upErr) throw new Error(`Error subiendo video: ${upErr.message}`)
 
+  step('Firmando URL…')
   const { data: signed, error: signErr } = await supabase.storage
     .from(SOURCE_BUCKET)
     .createSignedUrl(path, SIGNED_URL_EXPIRY_SECONDS)
@@ -180,12 +214,13 @@ export async function uploadMedia(opts: {
   file: File
   projectId?: string
   userId?: string
+  onStep?: (step: string) => void
 }): Promise<UploadResult> {
-  const { file, projectId, userId } = opts
+  const { file, projectId, userId, onStep } = opts
 
   if (file.type.startsWith('video/')) {
     if (!projectId) throw new Error('Subir videos requiere un projectId')
-    return uploadSourceVideo({ file, projectId, userId })
+    return uploadSourceVideo({ file, projectId, userId, onStep })
   }
 
   if (file.type.startsWith('image/')) {
