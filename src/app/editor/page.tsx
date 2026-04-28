@@ -14,7 +14,8 @@ import TemplateSelector from "@/components/TemplateSelector";
 import AIPlanner from "@/components/AIPlanner";
 import CreditsBadge from "@/components/CreditsBadge";
 import { TEMPLATES } from "@/lib/templates";
-import { uploadMediaToSupabase } from "@/lib/upload";
+import { uploadMedia, formatFileSize } from "@/lib/upload";
+import { useAuth } from "@/components/AuthProvider";
 
 function createDefaultProject(): Project {
   return {
@@ -80,8 +81,10 @@ function createDefaultProject(): Project {
 
 function EditorContent() {
   const { state, dispatch } = useEditor();
+  const { user } = useAuth();
   const [rightPanel, setRightPanel] = useState<"properties" | "captions" | "export" | "templates" | "ai">("properties");
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Auto-save to Supabase
@@ -250,6 +253,10 @@ function EditorContent() {
 
   function handleAddMedia() {
     if (!state.selectedSceneId) return;
+    if (!user) {
+      setUploadError("Sesión no detectada — recarga la página");
+      return;
+    }
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,video/mp4,video/webm,video/quicktime";
@@ -261,18 +268,49 @@ function EditorContent() {
 
       setUploadingMedia(true);
       setUploadError(null);
+      setUploadStatus(`Subiendo ${file.name} (${formatFileSize(file.size)})…`);
 
-      // Upload to Supabase Storage
       let src: string;
+      let durationSeconds: number | undefined;
       try {
-        const { publicUrl } = await uploadMediaToSupabase(file);
-        src = publicUrl;
+        const result = await uploadMedia({
+          file,
+          userId: user.id,
+          projectId: projectId ?? undefined,
+        });
+        // signedUrl para videos privados; publicUrl si el bucket es público
+        src = result.signedUrl || result.publicUrl;
+        durationSeconds = result.durationSeconds;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Error subiendo archivo";
+        console.error("uploadMedia failed:", msg);
         setUploadError(msg);
+        setUploadStatus(null);
         setUploadingMedia(false);
         return;
       }
+
+      // Si es el primer video del proyecto, registrarlo en projects.source_video_*
+      if (mediaType === "video" && projectId) {
+        try {
+          await fetch(`/api/projects/${projectId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_video_url: src,
+              source_video_duration_seconds: durationSeconds ?? null,
+            }),
+          });
+        } catch {
+          // no bloquear UI si falla el patch — el render usa src en scenes
+        }
+      }
+
+      // Calcular durationFrames a 30fps si conocemos la duración
+      const fps = state.project.fps ?? 30;
+      const durationFrames = durationSeconds
+        ? Math.max(30, Math.round(durationSeconds * fps))
+        : 150;
 
       const newMedia: MediaElement = {
         id: uuidv4(),
@@ -282,10 +320,10 @@ function EditorContent() {
         position: { x: 0, y: 0 },
         size: { width: 100, height: 100 },
         startFrame: 0,
-        durationFrames: 150,
+        durationFrames,
         opacity: 1,
         fit: "cover",
-        volume: mediaType === "video" ? 1 : undefined,
+        volume: mediaType === "video" ? 1.4 : undefined, // PRD §11 boost a 1.4x
       };
       dispatch({
         type: "ADD_MEDIA_ELEMENT",
@@ -297,6 +335,7 @@ function EditorContent() {
         elementId: newMedia.id,
         elementType: "media",
       });
+      setUploadStatus(null);
       setUploadingMedia(false);
     };
     input.click();
@@ -372,15 +411,15 @@ function EditorContent() {
 
         <div className="flex items-center gap-3">
           {uploadingMedia && (
-            <span className="text-xs text-[#6b7280] flex items-center gap-1">
-              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <span className="text-xs text-[#6b7280] flex items-center gap-1.5 max-w-[280px] truncate" title={uploadStatus ?? "Subiendo"}>
+              <svg className="animate-spin shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 11-6.219-8.56" />
               </svg>
-              Subiendo...
+              <span className="truncate">{uploadStatus ?? "Subiendo…"}</span>
             </span>
           )}
-          {uploadError && (
-            <span className="text-xs text-[#dc2626] max-w-[160px] truncate" title={uploadError}>
+          {uploadError && !uploadingMedia && (
+            <span className="text-xs text-[#dc2626] max-w-[280px] truncate" title={uploadError}>
               {uploadError}
             </span>
           )}

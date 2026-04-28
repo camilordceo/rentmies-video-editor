@@ -136,6 +136,12 @@ export interface Project {
   templateId: string | null;
   status: "draft" | "rendering" | "completed" | "error";
   outputUrl: string | null;
+  sourceVideoUrl?: string | null;
+  sourceVideoPath?: string | null;
+  sourceVideoDurationSeconds?: number | null;
+  brand?: string | null;
+  grade?: "canon" | "cinematic" | "warm" | "raw";
+  transcript?: unknown;
 }
 
 export interface Template {

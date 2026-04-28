@@ -36,6 +36,11 @@ export async function GET(
     templateId: data.template_id,
     status: data.status,
     outputUrl: data.output_url,
+    sourceVideoUrl: data.source_video_url ?? null,
+    sourceVideoPath: data.source_video_path ?? null,
+    sourceVideoDurationSeconds: data.source_video_duration_seconds ?? null,
+    brand: data.brand ?? null,
+    grade: data.grade ?? null,
   })
 }
 
@@ -55,6 +60,12 @@ export async function PATCH(
     status: string
     output_url: string
     thumbnail_url: string
+    source_video_url: string
+    source_video_path: string
+    source_video_duration_seconds: number | null
+    brand: string
+    grade: string
+    transcript: unknown
   }>
 
   try {
@@ -74,7 +85,8 @@ export async function PATCH(
     .single()
 
   if (error || !data) {
-    return NextResponse.json({ error: 'Error actualizando proyecto' }, { status: 500 })
+    console.error('PATCH project error:', error?.message)
+    return NextResponse.json({ error: error?.message || 'Error actualizando proyecto' }, { status: 500 })
   }
 
   return NextResponse.json({
@@ -89,6 +101,11 @@ export async function PATCH(
     templateId: data.template_id,
     status: data.status,
     outputUrl: data.output_url,
+    sourceVideoUrl: data.source_video_url ?? null,
+    sourceVideoPath: data.source_video_path ?? null,
+    sourceVideoDurationSeconds: data.source_video_duration_seconds ?? null,
+    brand: data.brand ?? null,
+    grade: data.grade ?? null,
   })
 }
 
