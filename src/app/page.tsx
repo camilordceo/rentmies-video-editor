@@ -76,7 +76,7 @@ function PlusIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function DashboardPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewProject, setShowNewProject] = useState(false);
@@ -89,36 +89,54 @@ export default function DashboardPage() {
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    // Esperar a que AuthProvider termine; si no hay user, no fetch
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     fetch("/api/projects")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`API ${r.status}`);
+        return r.json();
+      })
       .then((data) => { if (Array.isArray(data)) setProjects(data); })
+      .catch((err) => console.error("Error cargando proyectos:", err))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, authLoading]);
 
   async function handleCreateProject() {
-    if (!newProjectName.trim() || !user) return;
+    if (!newProjectName.trim()) {
+      setCreateError("El nombre es requerido");
+      return;
+    }
     setCreatingProject(true);
     setCreateError(null);
-    const project = createBlankProject(newProjectName.trim(), newProjectRatio);
+    const blank = createBlankProject(newProjectName.trim(), newProjectRatio);
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: project.name,
-          aspect_ratio: project.aspectRatio,
-          fps: project.fps,
-          scenes: project.scenes,
+          name: blank.name,
+          aspect_ratio: blank.aspectRatio,
+          fps: blank.fps,
+          scenes: blank.scenes,
         }),
       });
       const saved = await res.json();
-      if (!res.ok) throw new Error(saved.error || "Error creando proyecto");
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Sesión expirada — recarga la página");
+        throw new Error(saved.error || `Error ${res.status}`);
+      }
+      if (!saved?.id) throw new Error("Respuesta inválida del servidor");
       setShowNewProject(false);
       setNewProjectName("");
       window.location.href = `/editor?projectId=${saved.id}`;
     } catch (err: unknown) {
-      setCreateError(err instanceof Error ? err.message : "Error desconocido");
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      console.error("handleCreateProject:", msg);
+      setCreateError(msg);
     } finally {
       setCreatingProject(false);
     }
@@ -129,38 +147,31 @@ export default function DashboardPage() {
     if (!template) return;
     setCreatingProject(true);
     setCreateError(null);
-    const project: Project = {
-      id: uuidv4(),
-      name: `${template.name} Project`,
-      description: template.description,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      aspectRatio: template.aspectRatio,
-      fps: template.fps,
-      scenes: template.scenes,
-      templateId: template.id,
-      status: "draft",
-      outputUrl: null,
-    };
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: project.name,
-          description: project.description,
-          aspect_ratio: project.aspectRatio,
-          fps: project.fps,
-          scenes: project.scenes,
-          template_id: project.templateId,
+          name: `${template.name} Project`,
+          description: template.description,
+          aspect_ratio: template.aspectRatio,
+          fps: template.fps,
+          scenes: template.scenes,
+          template_id: template.id,
         }),
       });
       const saved = await res.json();
-      if (!res.ok) throw new Error(saved.error || "Error creando proyecto");
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Sesión expirada — recarga la página");
+        throw new Error(saved.error || `Error ${res.status}`);
+      }
+      if (!saved?.id) throw new Error("Respuesta inválida del servidor");
       setShowTemplates(false);
       window.location.href = `/editor?projectId=${saved.id}`;
     } catch (err: unknown) {
-      setCreateError(err instanceof Error ? err.message : "Error desconocido");
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      console.error("handleSelectTemplate:", msg);
+      setCreateError(msg);
     } finally {
       setCreatingProject(false);
     }

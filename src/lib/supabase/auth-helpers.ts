@@ -6,12 +6,23 @@
  *   if (!auth.ok) return auth.error
  *   const { user, profile } = auth
  *
- * El discriminador `ok` permite a TS narrowing seguro:
- * cuando ok=true, user/profile/supabase están garantizados.
+ * También auto-crea el profile si no existe (idempotente). Esto es
+ * crítico porque el signup con password NO pasa por /auth/callback,
+ * así que sin esto los usuarios autenticados quedarían sin profile.
  */
 import { createServerSupabaseClient, createAdminClient } from './server'
 import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+const RENTMIES_EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
+
+const ADMIN_EMAILS = new Set(
+  [
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+    'camilo@rentmies.com',
+    'camilord@rentmies.com',
+  ].filter(Boolean) as string[]
+)
 
 export interface UserProfileWithEmpresa {
   id: string
@@ -45,6 +56,65 @@ export interface AuthFailure {
 
 export type AuthResult = AuthSuccess | AuthFailure
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ensureProfile(userId: string, email: string, admin: any) {
+  const { data: existing } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (existing) return
+
+  const isAdmin = ADMIN_EMAILS.has(email)
+  const empresaId = isAdmin ? RENTMIES_EMPRESA_ID : null
+
+  const baseProfile: Record<string, unknown> = {
+    id: userId,
+    rol: isAdmin ? 'admin' : 'user',
+    empresa_id: empresaId,
+    plan: isAdmin ? 'enterprise' : 'free',
+    credits_remaining: isAdmin ? 999999 : 10,
+    activo: true,
+  }
+
+  // Intento incluir email + nombre. Si la tabla no las tiene, reintento sin ellas.
+  const profileWithEmail = {
+    ...baseProfile,
+    email,
+    nombre: email.split('@')[0],
+  }
+
+  const { error: insertErr } = await admin.from('profiles').insert(profileWithEmail)
+
+  if (insertErr) {
+    console.error('[ensureProfile] insert error:', insertErr.message)
+    // Reintento sin columnas opcionales
+    const { error: retryErr } = await admin.from('profiles').insert(baseProfile)
+    if (retryErr) {
+      console.error('[ensureProfile] retry error:', retryErr.message)
+      return
+    }
+  }
+
+  // Crear suscripción del editor (idempotente — UNIQUE en user_id)
+  try {
+    await admin.from('video_editor_subscriptions').insert({
+      user_id: userId,
+      empresa_id: empresaId,
+      plan: isAdmin ? 'enterprise' : 'free',
+      renders_limit: isAdmin ? 999999 : 3,
+      renders_used: 0,
+    })
+  } catch (e) {
+    // duplicate key es esperado si ya existe — ignorar
+    const msg = e instanceof Error ? e.message : String(e)
+    if (!msg.includes('duplicate')) {
+      console.error('[ensureProfile] subscription error:', msg)
+    }
+  }
+}
+
 export async function requireAuth(): Promise<AuthResult> {
   try {
     const supabase = await createServerSupabaseClient()
@@ -61,11 +131,19 @@ export async function requireAuth(): Promise<AuthResult> {
     }
 
     const admin = createAdminClient()
+
+    // Auto-crear profile si no existe — idempotente y no bloquea si falla
+    try {
+      await ensureProfile(user.id, user.email ?? '', admin)
+    } catch (e) {
+      console.error('[requireAuth] ensureProfile threw:', e)
+    }
+
     const { data: profile } = await admin
       .from('profiles')
       .select('*, empresas(*)')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     return {
       ok: true,
@@ -74,7 +152,8 @@ export async function requireAuth(): Promise<AuthResult> {
       supabase: supabase as unknown as SupabaseClient,
       error: null,
     }
-  } catch {
+  } catch (e) {
+    console.error('[requireAuth] unexpected error:', e)
     return {
       ok: false,
       user: null,
