@@ -1,57 +1,37 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+
+const PUBLIC_PATHS = new Set(['/auth', '/login', '/signup', '/favicon.ico'])
+
+const PUBLIC_PREFIXES = [
+  '/auth/',           // /auth/callback, /auth/error
+  '/api/auth/',       // futuras rutas de auth
+  '/api/webhooks/',   // wompi y otros providers
+  '/_next/',
+]
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.has(pathname)) return true
+  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
+}
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Refresca la sesión si existe — crítico para que las cookies se mantengan vivas
-  const { data: { user } } = await supabase.auth.getUser()
-
+  const { response, user } = await updateSession(request)
   const { pathname } = request.nextUrl
 
-  // Rutas siempre públicas — NO requieren sesión
-  const isPublicPath =
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/webhooks') ||
-    pathname === '/favicon.ico' ||
-    pathname.startsWith('/_next')
-
-  // Si no hay sesión y la ruta requiere auth → redirigir a /auth
-  if (!user && !isPublicPath) {
+  // Sin sesión + ruta privada → /auth con ?next=
+  if (!user && !isPublicPath(pathname)) {
     const loginUrl = new URL('/auth', request.url)
-    // Guardar la URL de destino para redirigir después del login
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si ya tiene sesión y va a /auth → redirigir al dashboard
-  if (user && pathname === '/auth') {
+  // Con sesión + en página de auth → /
+  if (user && (pathname === '/auth' || pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {

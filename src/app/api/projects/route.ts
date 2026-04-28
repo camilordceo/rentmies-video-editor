@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/supabase/auth'
+import { requireAuth } from '@/lib/supabase/auth-helpers'
 import { createAdminClient } from '@/lib/supabase/server'
 import type { Scene } from '@/lib/types'
 

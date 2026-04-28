@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPaymentSource } from "@/lib/wompi";
-import { getServiceClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const source = await createPaymentSource(token, customerEmail, acceptanceToken);
 
     // Save to Supabase payment_sources table
-    const supabase = getServiceClient();
+    const supabase = createAdminClient();
     const { data: saved, error: dbError } = await supabase
       .from("payment_sources")
       .insert({

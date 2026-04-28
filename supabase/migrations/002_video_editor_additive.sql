@@ -103,51 +103,88 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- -------------------------------------------------------------
--- 6. RLS en tablas nuevas
+-- 6. RLS en tablas nuevas (idempotente vía pg_policies check)
+-- Postgres NO soporta CREATE POLICY IF NOT EXISTS, hay que
+-- envolver en DO $$ ... $$ con consulta a pg_policies.
 -- -------------------------------------------------------------
 
 ALTER TABLE public.video_renders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.video_editor_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Admins ven y modifican todo en video_renders
-CREATE POLICY IF NOT EXISTS "admins_all_renders"
-  ON public.video_renders FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'admins_all_renders' AND tablename = 'video_renders'
+  ) THEN
+    CREATE POLICY "admins_all_renders"
+      ON public.video_renders FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.profiles
+          WHERE id = auth.uid() AND rol = 'admin'
+        )
+      );
+  END IF;
+END $$;
 
 -- Cada user ve y modifica sus propios renders
-CREATE POLICY IF NOT EXISTS "users_own_renders"
-  ON public.video_renders FOR ALL
-  USING (user_id = auth.uid());
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'users_own_renders' AND tablename = 'video_renders'
+  ) THEN
+    CREATE POLICY "users_own_renders"
+      ON public.video_renders FOR ALL
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- Empresas ven renders de su empresa (solo lectura)
-CREATE POLICY IF NOT EXISTS "empresa_renders"
-  ON public.video_renders FOR SELECT
-  USING (
-    empresa_id IN (
-      SELECT empresa_id FROM public.profiles
-      WHERE id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'empresa_renders' AND tablename = 'video_renders'
+  ) THEN
+    CREATE POLICY "empresa_renders"
+      ON public.video_renders FOR SELECT
+      USING (
+        empresa_id IN (
+          SELECT empresa_id FROM public.profiles
+          WHERE id = auth.uid()
+        )
+      );
+  END IF;
+END $$;
 
 -- Admins ven y modifican todo en suscripciones
-CREATE POLICY IF NOT EXISTS "admins_all_subscriptions"
-  ON public.video_editor_subscriptions FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'admins_all_subscriptions' AND tablename = 'video_editor_subscriptions'
+  ) THEN
+    CREATE POLICY "admins_all_subscriptions"
+      ON public.video_editor_subscriptions FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.profiles
+          WHERE id = auth.uid() AND rol = 'admin'
+        )
+      );
+  END IF;
+END $$;
 
 -- Cada user ve y modifica su propia suscripción
-CREATE POLICY IF NOT EXISTS "users_own_subscription"
-  ON public.video_editor_subscriptions FOR ALL
-  USING (user_id = auth.uid());
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'users_own_subscription' AND tablename = 'video_editor_subscriptions'
+  ) THEN
+    CREATE POLICY "users_own_subscription"
+      ON public.video_editor_subscriptions FOR ALL
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- -------------------------------------------------------------
 -- 7. Función helper: get_user_empresa_id()

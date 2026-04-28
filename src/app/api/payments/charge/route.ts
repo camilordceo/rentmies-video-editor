@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createTransaction, generateIntegritySignature } from "@/lib/wompi";
-import { getServiceClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getServiceClient();
+    const supabase = createAdminClient();
 
     // Look up the payment source
     const { data: source, error: srcErr } = await supabase

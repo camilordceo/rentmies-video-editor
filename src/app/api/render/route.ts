@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/supabase/auth'
+import { requireAuth } from '@/lib/supabase/auth-helpers'
 import { createAdminClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -69,15 +69,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error creando render job' }, { status: 500 })
   }
 
-  // 5. Log
-  await admin.from('admin_logs').insert({
-    level: 'info',
-    source: 'api/render',
-    message: `Render iniciado: ${compositionId}`,
-    user_id: user.id,
-    empresa_id: profile?.empresa_id ?? null,
-    context: { render_id: renderJob.id, composition_id: compositionId, project_id: projectId },
-  }).then(() => {}).catch(() => {}) // no bloquear si admin_logs no existe aún
+  // 5. Log — no bloquear si admin_logs no existe aún
+  try {
+    await admin.from('admin_logs').insert({
+      level: 'info',
+      source: 'api/render',
+      message: `Render iniciado: ${compositionId}`,
+      user_id: user.id,
+      empresa_id: profile?.empresa_id ?? null,
+      context: { render_id: renderJob.id, composition_id: compositionId, project_id: projectId },
+    })
+  } catch {
+    // ignore
+  }
 
   return NextResponse.json(
     {

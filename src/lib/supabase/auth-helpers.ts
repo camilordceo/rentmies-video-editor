@@ -1,6 +1,17 @@
-import { createServerSupabaseClient } from './server'
-import { createAdminClient } from './server'
+/**
+ * requireAuth(): guard estándar para API routes.
+ *
+ * Uso:
+ *   const auth = await requireAuth()
+ *   if (!auth.ok) return auth.error
+ *   const { user, profile } = auth
+ *
+ * El discriminador `ok` permite a TS narrowing seguro:
+ * cuando ok=true, user/profile/supabase están garantizados.
+ */
+import { createServerSupabaseClient, createAdminClient } from './server'
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface UserProfileWithEmpresa {
   id: string
@@ -20,8 +31,7 @@ export interface AuthSuccess {
   ok: true
   user: { id: string; email: string }
   profile: UserProfileWithEmpresa | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any
+  supabase: SupabaseClient
   error: null
 }
 
@@ -61,7 +71,7 @@ export async function requireAuth(): Promise<AuthResult> {
       ok: true,
       user: { id: user.id, email: user.email ?? '' },
       profile: profile as UserProfileWithEmpresa | null,
-      supabase,
+      supabase: supabase as unknown as SupabaseClient,
       error: null,
     }
   } catch {

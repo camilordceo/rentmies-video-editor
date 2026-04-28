@@ -1,37 +1,70 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getContentIdeas, createContentIdea, updateContentIdea } from "@/lib/supabase-queries";
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/supabase/auth-helpers'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  try {
-    const status = request.nextUrl.searchParams.get("status") || undefined;
-    const ideas = await getContentIdeas(status);
-    return NextResponse.json(ideas);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to fetch ideas";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  const status = request.nextUrl.searchParams.get('status')
+  const admin = createAdminClient()
+
+  let query = admin
+    .from('content_ideas')
+    .select('*')
+    .eq('user_id', auth.user.id)
+    .order('score', { ascending: false })
+
+  if (status) query = query.eq('status', status)
+
+  const { data, error } = await query
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data ?? [])
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  let body: Record<string, unknown>
   try {
-    const body = await request.json();
-    const idea = await createContentIdea(body);
-    return NextResponse.json(idea, { status: 201 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to create idea";
-    return NextResponse.json({ error: message }, { status: 500 });
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Body inválido' }, { status: 400 })
   }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('content_ideas')
+    .insert({
+      ...body,
+      user_id: auth.user.id,
+      empresa_id: auth.profile?.empresa_id ?? null,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { id, ...updates } = body;
-    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    const idea = await updateContentIdea(id, updates);
-    return NextResponse.json(idea);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to update idea";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  const body = await request.json()
+  const { id, ...updates } = body
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('content_ideas')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', auth.user.id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }

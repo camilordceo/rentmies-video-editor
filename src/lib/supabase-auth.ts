@@ -1,54 +1,65 @@
 /**
- * Cliente de autenticación del BROWSER.
- * USA createBrowserClient de @supabase/ssr — esto es crítico:
- * guarda la sesión en cookies además de localStorage, lo que
- * permite que el middleware del servidor pueda leer la sesión.
+ * Cliente del navegador para auth y queries client-side.
  *
- * NO usar createClient de @supabase/supabase-js aquí — ese cliente
- * solo guarda en localStorage y el middleware nunca lo ve.
+ * SINGLETON: una sola instancia compartida en toda la app.
+ * Esto es crítico: si onAuthStateChange y signInWithPassword
+ * operan sobre instancias distintas, el listener no se entera
+ * del login y el estado de auth queda desincronizado.
+ *
+ * Usa createBrowserClient de @supabase/ssr — la sesión vive en
+ * cookies (no solo localStorage) para que el middleware del
+ * servidor pueda leerla.
  */
 import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-function getAuthClient() {
+let _client: SupabaseClient | null = null
+
+export function getBrowserClient(): SupabaseClient {
+  if (_client) return _client
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) throw new Error('Supabase env vars not set')
-  // createBrowserClient sincroniza la sesión en cookies automáticamente
-  return createBrowserClient(url, key)
+  _client = createBrowserClient(url, key)
+  return _client
 }
 
+// ---------------------------------------------------------------------------
+// Auth methods
+// ---------------------------------------------------------------------------
+
 export async function signInWithPassword(email: string, password: string) {
-  return getAuthClient().auth.signInWithPassword({ email, password })
+  return getBrowserClient().auth.signInWithPassword({ email, password })
 }
 
 export async function signUp(email: string, password: string, nombre?: string) {
-  return getAuthClient().auth.signUp({
+  return getBrowserClient().auth.signUp({
     email,
     password,
-    options: {
-      data: { nombre: nombre || email.split('@')[0] },
-    },
+    options: { data: { nombre: nombre || email.split('@')[0] } },
   })
 }
 
 export async function signOut() {
-  return getAuthClient().auth.signOut()
+  return getBrowserClient().auth.signOut()
 }
 
 export async function getSession() {
-  return getAuthClient().auth.getSession()
+  return getBrowserClient().auth.getSession()
 }
 
 export async function getUser() {
-  return getAuthClient().auth.getUser()
+  return getBrowserClient().auth.getUser()
 }
 
-export function onAuthStateChange(callback: (event: string, session: unknown) => void) {
-  return getAuthClient().auth.onAuthStateChange(callback)
+export function onAuthStateChange(
+  callback: (event: string, session: unknown) => void
+) {
+  return getBrowserClient().auth.onAuthStateChange(callback)
 }
 
 export async function getProfile(userId: string) {
-  const { data, error } = await getAuthClient()
+  const { data, error } = await getBrowserClient()
     .from('profiles')
     .select('*')
     .eq('id', userId)

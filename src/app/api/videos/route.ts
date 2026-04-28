@@ -1,48 +1,83 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getVideos, createVideo, updateVideo, deleteVideo } from "@/lib/supabase-queries";
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/supabase/auth-helpers'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export async function GET() {
-  try {
-    const videos = await getVideos();
-    return NextResponse.json(videos);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to fetch videos";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('videos')
+    .select('*')
+    .eq('user_id', auth.user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data ?? [])
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  let body: Record<string, unknown>
   try {
-    const body = await request.json();
-    const video = await createVideo(body);
-    return NextResponse.json(video, { status: 201 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to create video";
-    return NextResponse.json({ error: message }, { status: 500 });
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Body inválido' }, { status: 400 })
   }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('videos')
+    .insert({
+      ...body,
+      user_id: auth.user.id,
+      empresa_id: auth.profile?.empresa_id ?? null,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { id, ...updates } = body;
-    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    const video = await updateVideo(id, updates);
-    return NextResponse.json(video);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to update video";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  const body = await request.json()
+  const { id, ...updates } = body
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('videos')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', auth.user.id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const { id } = await request.json();
-    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    await deleteVideo(id);
-    return NextResponse.json({ success: true });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to delete video";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const auth = await requireAuth()
+  if (!auth.ok) return auth.error
+
+  const { id } = await request.json()
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('videos')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', auth.user.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

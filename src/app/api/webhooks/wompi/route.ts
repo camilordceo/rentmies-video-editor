@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/wompi";
 import { addCredits } from "@/lib/credit-service";
-import { getServiceClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       console.log(`[wompi-webhook] Transaction ${wompiTxId} (${reference}) => ${newStatus}`);
 
-      const supabase = getServiceClient();
+      const supabase = createAdminClient();
 
       // Look up our internal transaction record
       const { data: txRecord, error: lookupErr } = await supabase
