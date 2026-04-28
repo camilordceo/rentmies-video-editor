@@ -253,10 +253,6 @@ function EditorContent() {
 
   function handleAddMedia() {
     if (!state.selectedSceneId) return;
-    if (!user) {
-      setUploadError("Sesión no detectada — recarga la página");
-      return;
-    }
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,video/mp4,video/webm,video/quicktime";
@@ -275,7 +271,7 @@ function EditorContent() {
       try {
         const result = await uploadMedia({
           file,
-          userId: user.id,
+          userId: user?.id,
           projectId: projectId ?? undefined,
         });
         // signedUrl para videos privados; publicUrl si el bucket es público

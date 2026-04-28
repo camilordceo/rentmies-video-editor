@@ -76,12 +76,20 @@ async function probeVideoDuration(file: File): Promise<number | undefined> {
   })
 }
 
+async function getCurrentUserId(supabase: ReturnType<typeof createClient>): Promise<string> {
+  const { data, error } = await supabase.auth.getUser()
+  if (error || !data?.user) {
+    throw new Error('Sesión expirada — recarga la página y vuelve a iniciar sesión')
+  }
+  return data.user.id
+}
+
 export async function uploadSourceVideo(opts: {
   file: File
-  userId: string
   projectId: string
+  userId?: string  // opcional — si no se pasa, lo lee del cliente
 }): Promise<UploadResult> {
-  const { file, userId, projectId } = opts
+  const { file, projectId } = opts
 
   if (!ALLOWED_VIDEO_MIME.has(file.type)) {
     throw new Error(`Formato no soportado: ${file.type || 'desconocido'}. Usa MP4, WebM o MOV.`)
@@ -91,6 +99,7 @@ export async function uploadSourceVideo(opts: {
   }
 
   const supabase = createClient()
+  const userId = opts.userId ?? (await getCurrentUserId(supabase))
   const filename = sanitizeFilename(file.name)
   const path = `${userId}/${projectId}/${filename}`
 
@@ -127,9 +136,9 @@ export async function uploadSourceVideo(opts: {
 
 export async function uploadAssetImage(opts: {
   file: File
-  userId: string
+  userId?: string
 }): Promise<UploadResult> {
-  const { file, userId } = opts
+  const { file } = opts
 
   if (!file.type.startsWith('image/')) {
     throw new Error(`Esperaba imagen, recibí ${file.type || 'desconocido'}`)
@@ -139,6 +148,7 @@ export async function uploadAssetImage(opts: {
   }
 
   const supabase = createClient()
+  const userId = opts.userId ?? (await getCurrentUserId(supabase))
   const filename = sanitizeFilename(file.name)
   const path = `${userId}/${filename}`
 
@@ -168,14 +178,14 @@ export async function uploadAssetImage(opts: {
  */
 export async function uploadMedia(opts: {
   file: File
-  userId: string
   projectId?: string
+  userId?: string
 }): Promise<UploadResult> {
-  const { file, userId, projectId } = opts
+  const { file, projectId, userId } = opts
 
   if (file.type.startsWith('video/')) {
     if (!projectId) throw new Error('Subir videos requiere un projectId')
-    return uploadSourceVideo({ file, userId, projectId })
+    return uploadSourceVideo({ file, projectId, userId })
   }
 
   if (file.type.startsWith('image/')) {
