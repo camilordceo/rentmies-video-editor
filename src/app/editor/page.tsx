@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { EditorProvider, useEditor } from "@/lib/store";
@@ -14,7 +14,7 @@ import TemplateSelector from "@/components/TemplateSelector";
 import AIPlanner from "@/components/AIPlanner";
 import CreditsBadge from "@/components/CreditsBadge";
 import { TEMPLATES } from "@/lib/templates";
-import { uploadMedia, formatFileSize } from "@/lib/upload";
+import { uploadMedia, formatFileSize, type UploadProgress } from "@/lib/upload";
 import { useAuth } from "@/components/AuthProvider";
 
 function createDefaultProject(): Project {
@@ -79,32 +79,46 @@ function createDefaultProject(): Project {
   };
 }
 
-function EditorContent() {
+function EditorContent({ projectId }: { projectId: string | null }) {
   const { state, dispatch } = useEditor();
   const { user } = useAuth();
   const [rightPanel, setRightPanel] = useState<"properties" | "captions" | "export" | "templates" | "ai">("properties");
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
 
-  // Auto-save to Supabase
-  const projectId = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("projectId")
-    : null;
+  // Guard: el primer render dispara el effect aunque el usuario no haya tocado
+  // nada (SET_PROJECT ocurre en mount). Sin esto se hace un PATCH idéntico al
+  // servidor cada vez que se abre el editor.
+  const isFirstSaveRef = useRef(true);
 
   useEffect(() => {
     if (!projectId) return;
-    const timer = setTimeout(() => {
-      fetch(`/api/projects/${projectId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: state.project.name,
-          scenes: state.project.scenes,
-          status: state.project.status,
-        }),
-      }).catch(() => {});
-    }, 3000);
+    if (isFirstSaveRef.current) {
+      isFirstSaveRef.current = false;
+      return;
+    }
+    setSaveStatus("saving");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: state.project.name,
+            scenes: state.project.scenes,
+            status: state.project.status,
+          }),
+        });
+        setSaveStatus(res.ok ? "saved" : "error");
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 1500);
     return () => clearTimeout(timer);
   }, [state.project.scenes, state.project.name, state.project.status, projectId]);
 
@@ -264,43 +278,70 @@ function EditorContent() {
 
       setUploadingMedia(true);
       setUploadError(null);
-      setUploadStatus(`Subiendo ${file.name} (${formatFileSize(file.size)})…`);
+      setUploadProgress(null);
+      setUploadStatus(`Preparando ${file.name} (${formatFileSize(file.size)})…`);
+
+      const abort = new AbortController();
+      uploadAbortRef.current = abort;
 
       let src: string;
+      let bucketPath: string | undefined;
       let durationSeconds: number | undefined;
       try {
         const result = await uploadMedia({
           file,
           userId: user?.id,
           projectId: projectId ?? undefined,
-          onStep: (s) => setUploadStatus(`${file.name} · ${s}`),
+          signal: abort.signal,
+          onStep: (s) => setUploadStatus(s),
+          onProgress: (p) => setUploadProgress(p),
         });
         // signedUrl para videos privados; publicUrl si el bucket es público
         src = result.signedUrl || result.publicUrl;
+        bucketPath = result.path;
         durationSeconds = result.durationSeconds;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Error subiendo archivo";
-        console.error("uploadMedia failed:", msg);
+        console.error("[uploadMedia] failed:", err);
         setUploadError(msg);
         setUploadStatus(null);
+        setUploadProgress(null);
         setUploadingMedia(false);
+        uploadAbortRef.current = null;
         return;
       }
+      uploadAbortRef.current = null;
 
       // Si es el primer video del proyecto, registrarlo en projects.source_video_*
+      // El path es lo que usa /api/transcribe y el render para descargar el archivo
+      // server-side. Sin path, Auto-Caption no funciona.
       if (mediaType === "video" && projectId) {
         try {
           await fetch(`/api/projects/${projectId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               source_video_url: src,
+              source_video_path: bucketPath,
               source_video_duration_seconds: durationSeconds ?? null,
+              source_video_size_mb: file.size / 1024 / 1024,
+              source_video_codec: file.type,
             }),
           });
         } catch {
           // no bloquear UI si falla el patch — el render usa src en scenes
         }
+        // Reflejar localmente para que CaptionEditor pueda usar sourceVideoPath
+        // sin esperar al refresh.
+        dispatch({
+          type: "UPDATE_PROJECT_META",
+          updates: {
+            sourceVideoUrl: src,
+            sourceVideoPath: bucketPath,
+            sourceVideoDurationSeconds: durationSeconds ?? null,
+          },
+        });
       }
 
       // Calcular durationFrames a 30fps si conocemos la duración
@@ -333,9 +374,17 @@ function EditorContent() {
         elementType: "media",
       });
       setUploadStatus(null);
+      setUploadProgress(null);
       setUploadingMedia(false);
     };
     input.click();
+  }
+
+  function cancelUpload() {
+    if (uploadAbortRef.current) {
+      uploadAbortRef.current.abort();
+      uploadAbortRef.current = null;
+    }
   }
 
   function handleSelectTemplate(templateId: string) {
@@ -408,19 +457,36 @@ function EditorContent() {
 
         <div className="flex items-center gap-3">
           {uploadingMedia && (
-            <span className="text-xs text-[#6b7280] flex items-center gap-1.5 max-w-[280px] truncate" title={uploadStatus ?? "Subiendo"}>
+            <span className="text-xs text-[#40d99d] font-mono flex items-center gap-1.5">
               <svg className="animate-spin shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 11-6.219-8.56" />
               </svg>
-              <span className="truncate">{uploadStatus ?? "Subiendo…"}</span>
-            </span>
-          )}
-          {uploadError && !uploadingMedia && (
-            <span className="text-xs text-[#dc2626] max-w-[280px] truncate" title={uploadError}>
-              {uploadError}
+              {uploadProgress ? `${uploadProgress.percent}%` : "…"}
             </span>
           )}
           <CreditsBadge />
+          {projectId && (
+            <span
+              className="text-xs font-medium"
+              style={{
+                color:
+                  saveStatus === "saved"
+                    ? "#40d99d"
+                    : saveStatus === "saving"
+                    ? "#fbbf24"
+                    : "#dc2626",
+              }}
+              title={
+                saveStatus === "saved"
+                  ? "Cambios guardados"
+                  : saveStatus === "saving"
+                  ? "Guardando…"
+                  : "Error al guardar"
+              }
+            >
+              {saveStatus === "saved" ? "✓ Guardado" : saveStatus === "saving" ? "Guardando…" : "⚠ Error"}
+            </span>
+          )}
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               state.project.status === "completed"
@@ -432,6 +498,69 @@ function EditorContent() {
           </span>
         </div>
       </header>
+
+      {/* Upload progress bar — fija arriba, imposible de perder */}
+      {uploadingMedia && (
+        <div className="bg-[#1a2035] text-white px-4 py-2 border-b border-[#40d99d]/30">
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <svg className="animate-spin shrink-0 text-[#40d99d]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 11-6.219-8.56" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="truncate">{uploadStatus ?? "Subiendo…"}</span>
+                <span className="font-mono text-[#40d99d] shrink-0 ml-3">
+                  {uploadProgress ? `${uploadProgress.percent}%` : "—"}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-[#0a0e1e] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#40d99d] transition-all duration-200"
+                  style={{ width: uploadProgress ? `${uploadProgress.percent}%` : "5%" }}
+                />
+              </div>
+            </div>
+            <button
+              onClick={cancelUpload}
+              className="text-xs text-[#6b7280] hover:text-red-400 px-2 py-1 shrink-0"
+              type="button"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error panel — grande y persistente hasta que cierres */}
+      {uploadError && !uploadingMedia && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
+          <div className="max-w-3xl mx-auto flex items-start gap-3">
+            <svg className="shrink-0 text-red-600 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-red-700 uppercase tracking-wider mb-1">
+                Error subiendo archivo
+              </p>
+              <p className="text-sm text-red-700 break-words">
+                {uploadError}
+              </p>
+              <p className="text-[11px] text-red-500 mt-1">
+                Abrí DevTools (F12) → Console para ver más detalle.
+              </p>
+            </div>
+            <button
+              onClick={() => setUploadError(null)}
+              className="text-xs text-red-700 hover:text-red-900 px-2 py-1 shrink-0"
+              type="button"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Editor Layout */}
       <div className="flex-1 flex overflow-hidden">
@@ -471,15 +600,14 @@ function EditorContent() {
 
 function EditorPageInner() {
   const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  const dataParam = searchParams.get("data");
   const [project, setProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    const projectId = searchParams.get("projectId");
-    const data = searchParams.get("data");
-
-    if (projectId && !data) {
+    if (projectId && !dataParam) {
       // Load from Supabase
-      fetch(`/api/projects/${projectId}`)
+      fetch(`/api/projects/${projectId}`, { credentials: "include" })
         .then((r) => r.json())
         .then((p) => {
           if (p && !p.error) {
@@ -489,16 +617,16 @@ function EditorPageInner() {
           }
         })
         .catch(() => setProject(createDefaultProject()));
-    } else if (data) {
+    } else if (dataParam) {
       try {
-        setProject(JSON.parse(decodeURIComponent(data)) as Project);
+        setProject(JSON.parse(decodeURIComponent(dataParam)) as Project);
       } catch {
         setProject(createDefaultProject());
       }
     } else {
       setProject(createDefaultProject());
     }
-  }, [searchParams]);
+  }, [projectId, dataParam]);
 
   if (!project) {
     return (
@@ -510,7 +638,7 @@ function EditorPageInner() {
 
   return (
     <EditorProvider initialProject={project}>
-      <EditorContent />
+      <EditorContent projectId={projectId} />
     </EditorProvider>
   );
 }
