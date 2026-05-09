@@ -88,6 +88,23 @@ function EditorContent({ projectId }: { projectId: string | null }) {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const uploadAbortRef = useRef<AbortController | null>(null);
+  const [diagRunning, setDiagRunning] = useState(false);
+  const [diagResult, setDiagResult] = useState<unknown>(null);
+
+  async function runDiagnostic() {
+    setDiagRunning(true);
+    setDiagResult(null);
+    try {
+      const res = await fetch("/api/diag", { credentials: "include" });
+      const json = await res.json();
+      console.log("[diag]", json);
+      setDiagResult(json);
+    } catch (e) {
+      setDiagResult({ ok: false, error: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setDiagRunning(false);
+    }
+  }
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
 
   // Guard: el primer render dispara el effect aunque el usuario no haya tocado
@@ -521,6 +538,15 @@ function EditorContent({ projectId }: { projectId: string | null }) {
               </div>
             </div>
             <button
+              onClick={runDiagnostic}
+              disabled={diagRunning}
+              className="text-xs text-[#40d99d] hover:text-white px-2 py-1 shrink-0 disabled:opacity-50"
+              type="button"
+              title="Verificar auth + buckets + RLS server-side"
+            >
+              {diagRunning ? "…" : "Diagnóstico"}
+            </button>
+            <button
               onClick={cancelUpload}
               className="text-xs text-[#6b7280] hover:text-red-400 px-2 py-1 shrink-0"
               type="button"
@@ -548,9 +574,17 @@ function EditorContent({ projectId }: { projectId: string | null }) {
                 {uploadError}
               </p>
               <p className="text-[11px] text-red-500 mt-1">
-                Abrí DevTools (F12) → Console para ver más detalle.
+                Abrí DevTools (F12) → Console para ver más detalle, o corré el diagnóstico para chequear auth/buckets/RLS server-side.
               </p>
             </div>
+            <button
+              onClick={runDiagnostic}
+              disabled={diagRunning}
+              className="text-xs px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 shrink-0 disabled:opacity-50"
+              type="button"
+            >
+              {diagRunning ? "Corriendo…" : "Diagnóstico"}
+            </button>
             <button
               onClick={() => setUploadError(null)}
               className="text-xs text-red-700 hover:text-red-900 px-2 py-1 shrink-0"
@@ -561,6 +595,29 @@ function EditorContent({ projectId }: { projectId: string | null }) {
           </div>
         </div>
       )}
+
+      {/* Resultado del diagnóstico — JSON crudo, claro y copiable */}
+      {diagResult ? (
+        <div className="bg-[#0a0e1e] text-white px-4 py-3 border-b border-[#40d99d]/30">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#40d99d]">
+                Diagnóstico /api/diag
+              </span>
+              <button
+                onClick={() => setDiagResult(null)}
+                className="text-xs text-[#6b7280] hover:text-white px-2"
+                type="button"
+              >
+                Cerrar
+              </button>
+            </div>
+            <pre className="text-[11px] font-mono text-[#4fffb4] bg-black/40 p-3 rounded overflow-auto max-h-64 whitespace-pre-wrap break-words">
+              {JSON.stringify(diagResult, null, 2)}
+            </pre>
+          </div>
+        </div>
+      ) : null}
 
       {/* Main Editor Layout */}
       <div className="flex-1 flex overflow-hidden">

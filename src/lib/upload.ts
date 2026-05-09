@@ -123,9 +123,24 @@ async function probeVideoDuration(file: File): Promise<number | undefined> {
 }
 
 async function getCurrentUserId(supabase: ReturnType<typeof createClient>): Promise<string> {
-  const { data, error } = await supabase.auth.getUser()
+  // auth.getUser() puede colgarse si el endpoint de Supabase no responde
+  // (CORS, env vars mal seteadas, red). Hard timeout 8s para que el upload
+  // muestre error en lugar de spinner infinito.
+  const result = await Promise.race([
+    supabase.auth.getUser(),
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(new Error(
+            'Timeout (8s) verificando sesión con Supabase. Causas: env vars NEXT_PUBLIC_SUPABASE_URL/ANON_KEY no aplicadas en este deploy, o el endpoint de Supabase no responde. Probá: GET /api/diag para diagnóstico server-side.'
+          )),
+        8000
+      )
+    ),
+  ])
+  const { data, error } = result
   if (error || !data?.user) {
-    throw new Error('Sesión expirada — recarga la página y vuelve a iniciar sesión')
+    throw new Error(`Sesión inválida: ${error?.message ?? 'sin user'} — recarga e iniciá sesión de nuevo.`)
   }
   return data.user.id
 }
