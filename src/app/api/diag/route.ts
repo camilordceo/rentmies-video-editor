@@ -23,24 +23,48 @@ export async function GET() {
   type Step = { name: string; ok: boolean; detail?: unknown }
   const steps: Step[] = []
 
-  // 1. Env vars
+  // 1. Env vars (con aliases — next.config.js mapea SUPABASE_URL → NEXT_PUBLIC_*)
   const env = {
     NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_URL: !!process.env.SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_KEY,
     OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
     REMOTION_AWS_REGION: !!process.env.REMOTION_AWS_REGION,
     REMOTION_LAMBDA_FUNCTION_NAME: !!process.env.REMOTION_LAMBDA_FUNCTION_NAME,
     REMOTION_SERVE_URL: !!process.env.REMOTION_SERVE_URL,
   }
-  const requiredEnv = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY']
-  const missingEnv = requiredEnv.filter((k) => !env[k as keyof typeof env])
+  const resolvedUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || ''
+  const resolvedAnon =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    ''
+  const resolvedService =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    ''
+  const missingResolved: string[] = []
+  if (!resolvedUrl) missingResolved.push('SUPABASE URL (probá NEXT_PUBLIC_SUPABASE_URL o SUPABASE_URL)')
+  if (!resolvedAnon) missingResolved.push('ANON KEY (probá NEXT_PUBLIC_SUPABASE_ANON_KEY o SUPABASE_ANON_KEY)')
+  if (!resolvedService) missingResolved.push('SERVICE ROLE KEY (probá SUPABASE_SERVICE_ROLE_KEY o SUPABASE_SERVICE_KEY)')
   steps.push({
     name: 'env_vars',
-    ok: missingEnv.length === 0,
-    detail: missingEnv.length === 0
-      ? 'Todas las env vars críticas están presentes'
-      : `Faltan: ${missingEnv.join(', ')}`,
+    ok: missingResolved.length === 0,
+    detail: {
+      message:
+        missingResolved.length === 0
+          ? 'Todas las env vars críticas están presentes (aliases resueltos)'
+          : `Faltan: ${missingResolved.join(' · ')}`,
+      browserBundleHasNextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      browserBundleHasNextPublicAnon: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hint:
+        !process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_URL
+          ? 'Tenés SUPABASE_URL pero no NEXT_PUBLIC_SUPABASE_URL — el browser necesita next.config.js para mapearlo. Asegurate de que el deploy se hizo después de actualizar next.config.js.'
+          : undefined,
+    },
   })
 
   // 2. Auth — usar el client SSR para leer cookie

@@ -19,7 +19,14 @@ export function getBrowserClient(): SupabaseClient {
   if (_client) return _client
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) throw new Error('Supabase env vars not set')
+  if (!url || !key) {
+    throw new Error(
+      'Supabase env vars no inlineadas en el build del cliente. ' +
+        'En Vercel agregá NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY ' +
+        '(o SUPABASE_URL + SUPABASE_ANON_KEY — next.config.js los traduce automáticamente). ' +
+        'Después redeployá para que la nueva build inlinee los valores.'
+    )
+  }
   _client = createBrowserClient(url, key)
   return _client
 }
